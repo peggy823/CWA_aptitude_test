@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>下載您的測驗結果</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;700&display=swap" rel="stylesheet">
 <style>
 body {
     margin: 0; padding: 20px; font-family: "Noto Sans TC", sans-serif;
@@ -25,22 +25,37 @@ body {
 <canvas id="canvasWorker" width="800" height="1200"></canvas>
 
 <script>
-// 解析網址參數並使用 decodeURIComponent 安全還原中文
-function getUrlParam(name) {
-    let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
-    let r = window.location.search.substr(1).match(reg);
-    if (r != null) return decodeURIComponent(r[2]); 
-    return null;
-}
+const localConfig = {
+    type1: {
+        title: "碰少速快",
+        text: "你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
+        bg: "images/bg_sunny.jpg"
+    },
+    type2: {
+        title: "碰少速慢",
+        text: "你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
+        bg: "images/bg_cloudy.jpg"
+    },
+    type3: {
+        title: "碰多速快",
+        text: "你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。",
+        bg: "images/bg_thunder.jpg"
+    },
+    type4: {
+        title: "碰多速慢",
+        text: "你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。",
+        bg: "images/bg_rainy.jpg"
+    }
+};
 
-const bgUrl = getUrlParam('bg');
-const title = getUrlParam('title');
-const text = getUrlParam('text');
+const urlParams = new URLSearchParams(window.location.search);
+const t = urlParams.get('t');
+let resData = localConfig["type" + t];
 
-if (bgUrl && title && text) {
-    drawAndRender(bgUrl, title, text);
+if (resData) {
+    drawAndRender(resData.bg, resData.title, resData.text);
 } else {
-    document.getElementById("loading").innerText = "讀取資料失敗，請確認是否完整掃描 QR Code。";
+    document.getElementById("loading").innerText = "讀取資料失敗，參數不正確。";
 }
 
 function drawAndRender(bgUrl, title, text) {
@@ -52,22 +67,18 @@ function drawAndRender(bgUrl, title, text) {
     img.onload = function() {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // 繪製半透明襯底
         ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
         ctx.fillRect(50, 300, canvas.width - 100, 500);
         
-        // 寫入標題
         ctx.fillStyle = "#1565c0";
         ctx.font = "bold 50px Noto Sans TC, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(title, canvas.width / 2, 420);
         
-        // 寫入內文（自動換行）
         ctx.fillStyle = "#333333";
         ctx.font = "36px Noto Sans TC, sans-serif";
         wrapText(ctx, text, canvas.width / 2, 520, canvas.width - 200, 60);
         
-        // 渲染到網頁圖片標籤上
         const finalImage = document.getElementById("finalImage");
         finalImage.src = canvas.toDataURL("image/jpeg", 0.9);
         
@@ -77,7 +88,7 @@ function drawAndRender(bgUrl, title, text) {
     };
     
     img.onerror = function() {
-        document.getElementById("loading").innerText = "結果底圖載入失敗，請確認圖片檔案路徑與檔名是否正確。";
+        document.getElementById("loading").innerText = "結果底圖載入失敗。";
     };
 }
 
