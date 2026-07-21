@@ -146,11 +146,11 @@ function startTest(){
         return;
     }
 
-    let resData;
-    if(A <= 3 && B <= 13)      { resData = config.results.type1; }
-    else if(A <= 3 && B > 13)  { resData = config.results.type2; }
-    else if(A > 3 && B <= 13)  { resData = config.results.type3; }
-    else                       { resData = config.results.type4; }
+    let resData, typeCode = "";
+    if(A <= 3 && B <= 13)      { resData = config.results.type1; typeCode = "1"; }
+    else if(A <= 3 && B > 13)  { resData = config.results.type2; typeCode = "2"; }
+    else if(A > 3 && B <= 13)  { resData = config.results.type3; typeCode = "3"; }
+    else                       { resData = config.results.type4; typeCode = "4"; }
 
     document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
     document.getElementById("title").innerHTML = resData.title;
@@ -163,17 +163,16 @@ function startTest(){
     let currentUrl = window.location.href;
     let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
     
-    // 🔥【改良優化版網址】直接把文字與底圖路徑打包傳過去，但「不包含」落落長的內文。
-    // 這能讓網址維持在極短長度，QR Code 格子極少、極度稀疏好掃！
-    let downloadPageUrl = `${baseUrl}/download.html?title=${encodeURIComponent(resData.title)}&bg=${encodeURIComponent(resData.bg)}`;
+    // 🔥【極致精簡】只傳送 1, 2, 3, 4 代號，完全避開中文，QR Code 絕對不會死白
+    let downloadPageUrl = `${baseUrl}/download.html?t=${typeCode}`;
 
     new QRCode(document.getElementById("qrcode"), {
         text: downloadPageUrl,
-        width: 110,    // 👈 保持你想要的 110px 尺寸，格子稀疏後超好掃
+        width: 110,
         height: 110
     });
 }
-
+    
 function goHome(){
     document.getElementById("resultPage").style.display = "none";
     document.getElementById("homePage").style.display = "block";
