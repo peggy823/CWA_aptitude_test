@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>性向測驗</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;700&display=swap" rel="stylesheet">
 <style>
 body{
     margin:0; font-family:"Noto Sans TC",sans-serif;
@@ -12,7 +12,6 @@ body{
     display:flex; justify-content:center; align-items:center; min-height:100vh;
 }
 .container{
-    position: relative;
     background:white; width:90%; max-width:500px; border-radius:20px; padding:30px; text-align:center;
     box-shadow:0 10px 25px rgba(0,0,0,.15); background-size: cover; background-position: center; transition: background 0.5s ease;
 }
@@ -22,30 +21,59 @@ input{ width:90%; padding:12px; margin:10px 0 20px; font-size:18px; border-radiu
 button{ background:#2196f3; color:white; border:none; padding:12px 25px; font-size:18px; border-radius:10px; cursor:pointer; transition:.3s; margin: 5px; }
 button:hover{ background:#1976d2; }
 #resultPage{ display:none; }
-.result-box { background: rgba(255, 255, 255, 0.85); padding: 30px 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; }
+
+/* 1. 結果卡片：純粹放文字，完全置中，不塞其他東西 */
+.result-box {
+    background: rgba(255, 255, 255, 0.85);
+    padding: 35px 25px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    text-align: center;
+}
 .resultTitle{ font-size:28px; color:#1565c0; margin-bottom:20px; font-weight:bold; }
-.resultText{ font-size:22px; line-height:1.8;padding: 0 10px; }
+.resultText{ font-size:21px; line-height:1.8; color: #333; }
+
+/* 2. 卡片外的 QR Code 區塊：獨立置中 */
+.qr-outside-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 👈 讓提示字與 QR Code 居中對齊 */
+    justify-content: center;
+    margin-bottom: 25px;
+}
+
+/* 3. 卡片外的提示文字 */
+.qr-outside-tip {
+    font-size: 14px;
+    color: #444;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* 4. QR Code 白色襯底 */
 #qrcode {
-    position: absolute;  /* 👈 啟用絕對定位 */
-    right: 20px;        /* 👈 距離右邊邊界 20px */
-    bottom: 20px;       /* 👈 距離底部邊界 20px */
-    background: white;   /* 加上白色背景，在任何暗色底圖上都清晰 */
-    padding: 6px;        /* QR Code 周圍的白邊襯底 */
-    border-radius: 8px;  /* 讓 QR Code 邊角帶點圓弧 */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* 微微的陰影更有質感 */
+    background: white;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: inline-block;
 }
-#resultPage button {
-margin-top: 10px;
+
+/* 5. 最下方的回首頁按鈕 */
+.back-btn {
+    margin-top: 10px;
+    background: #78909c; /* 換個顏色與主要按鈕區隔，更有層次 */
 }
+.back-btn:hover { background: #546e7a; }
 </style>
 </head>
 <body>
 
 <div class="container" id="mainContainer">
 
+    <!-- 首頁區塊 -->
     <div id="homePage">
-        <!-- 📝【預留路徑】首頁圖 -->
-        <img src="images/home_banner.png" alt="首頁設計圖" class="home-banner" id="homeImg">
+        <img src="images/home_banner.jpg" alt="首頁設計圖" class="home-banner" id="homeImg">
         <h1>🌦️ 性向測驗</h1>
         <h3>閃電次數(A)</h3>
         <input type="number" id="A">
@@ -54,15 +82,24 @@ margin-top: 10px;
         <button onclick="startTest()">開始測驗</button>
     </div>
 
+    <!-- 結果頁區塊（全新垂直堆疊結構） -->
     <div id="resultPage">
+        <!-- (1) 置中的文字圖卡 -->
         <div class="result-box">
             <div class="resultTitle" id="title"></div>
             <div class="resultText" id="text"></div>
         </div>
-        <h3>📱 掃描 QR Code 用手機下載結果圖</h3>
-        <div id="qrcode"></div>
-        <br>
-        <button onclick="goHome()">回首頁</button>
+        
+        <!-- (2) 圖卡外的 QR Code 置中區 -->
+        <div class="qr-outside-zone">
+            <div class="qr-outside-tip">📱 掃描 QR Code 用手機下載結果圖</div>
+            <div id="qrcode"></div>
+        </div>
+
+        <!-- (3) 最底部的回首頁按鈕 -->
+        <div>
+            <button class="back-btn" onclick="goHome()">回首頁</button>
+        </div>
     </div>
 
 </div>
@@ -70,35 +107,34 @@ margin-top: 10px;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // ==========================================
-// 🎨 全域設定區：未來修改檔名、文字，只需改這裡！
+// 🎨 全域設定區
 // ==========================================
 const config = {
-    homeImage: "images/home_banner.png", // 首頁圖路徑
+    homeImage: "images/home_banner.png", 
     results: {
         type1: {
             title: "你/妳是...【晴天的魔術師】",
             text: "思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
-            bg: "images/bg_sunny.png" // 📝【預留路徑】
+            bg: "images/bg_sunny.png" 
         },
         type2: {
             title: "你/妳是...【細心的小偵探】",
             text: "能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
-            bg: "images/bg_cloudy.png" // 📝【預留路徑】
+            bg: "images/bg_cloudy.png" 
         },
         type3: {
             title: "你/妳就像雷電一樣",
-            text: "是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。",
-            bg: "images/bg_thunder.png" // 📝【預留路徑】
+            text: "是充滿熱情活力的賽車手，常帶隔身邊的人歡笑和驚喜。",
+            bg: "images/bg_thunder.png" 
         },
         type4: {
             title: "你/妳是...【有幽默感的藝術家】",
             text: "即使在大雨中仍保有幽默感，內心住著浪漫的靈魂。",
-            bg: "images/bg_rainy.png" // 📝【預留路徑】
+            bg: "images/bg_rainy.png" 
         }
     }
 };
 
-// 載入首頁圖
 document.getElementById("homeImg").src = config.homeImage;
 
 function startTest(){
@@ -110,14 +146,12 @@ function startTest(){
         return;
     }
 
-    // 依據條件撈取 config 內的資料物件
-    let resData;
-    if(A <= 3 && B <= 13)      resData = config.results.type1;
-    else if(A <= 3 && B > 13)  resData = config.results.type2;
-    else if(A > 3 && B <= 13)  resData = config.results.type3;
-    else                       resData = config.results.type4;
+    let resData, typeCode = "";
+    if(A <= 3 && B <= 13)      { resData = config.results.type1; typeCode = "1"; }
+    else if(A <= 3 && B > 13)  { resData = config.results.type2; typeCode = "2"; }
+    else if(A > 3 && B <= 13)  { resData = config.results.type3; typeCode = "3"; }
+    else                       { resData = config.results.type4; typeCode = "4"; }
 
-    // 更新現場畫面
     document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
     document.getElementById("title").innerHTML = resData.title;
     document.getElementById("text").innerHTML = resData.text;
@@ -126,21 +160,16 @@ function startTest(){
     document.getElementById("resultPage").style.display = "block";
     document.getElementById("qrcode").innerHTML = "";
 
-    // 【核心邏輯】把圖片路徑、標題、內文全部編碼進網址參數
     let currentUrl = window.location.href;
     let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
     
-    // 使用 encodeURIComponent 確保中文在傳輸時不會壞掉
-    let paramBg = encodeURIComponent(resData.bg);
-    let paramTitle = encodeURIComponent(resData.title);
-    let paramText = encodeURIComponent(resData.text);
-
-    let downloadPageUrl = `${baseUrl}/download.html?bg=${paramBg}&title=${paramTitle}&text=${paramText}`;
+    // 【極簡化網址】只帶代號，確保 QR Code 格子少、極度好掃
+    let downloadPageUrl = `${baseUrl}/download.html?t=${typeCode}`;
 
     new QRCode(document.getElementById("qrcode"), {
         text: downloadPageUrl,
-        width: 120,
-        height: 120
+        width: 110,    // 👈 110px 既不佔空間，搭配精簡網址又能秒掃
+        height: 110
     });
 }
 
