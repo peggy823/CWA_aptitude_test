@@ -28,15 +28,17 @@ body{
     box-shadow:0 10px 25px rgba(0,0,0,.15);
     background-size: cover;
     background-position: center;
-    transition: background 0.5s ease; /* 切換底圖時有淡入效果 */
+    transition: background 0.5s ease;
 }
 
-/* 首頁設計圖樣式 */
+/* 首頁自訂設計圖樣式 */
 .home-banner {
     width: 100%;
-    max-width: 300px;
+    max-width: 100%;
+    height: auto;
     border-radius: 15px;
     margin-bottom: 15px;
+    display: block;
 }
 
 h1{
@@ -74,7 +76,7 @@ button:hover{
     display:none;
 }
 
-/* 為了在大雨或暗色底圖下看得清，加個半透明襯底或陰影 */
+/* 文字襯底框，確保在各種自訂底圖下都能清晰閱讀文字 */
 .result-box {
     background: rgba(255, 255, 255, 0.85);
     padding: 20px;
@@ -100,7 +102,7 @@ button:hover{
     justify-content: center;
 }
 
-/* 隱藏用來畫圖的 canvas */
+/* 隱藏後台繪圖用的 canvas */
 #canvasWorker {
     display: none;
 }
@@ -112,8 +114,8 @@ button:hover{
 <div class="container" id="mainContainer">
 
 <div id="homePage">
-<!-- 1. 首頁自己設計的圖 -->
-<img src="https://picsum.photos/600/400?random=1" alt="首頁設計圖" class="home-banner">
+<!-- 【首頁設計圖】預留位置：請在 src 填入你的首頁圖片路徑 -->
+<img src="images/home_banner.jpg" alt="首頁設計圖" class="home-banner" id="homeImg">
 
 <h1>🌦️ 性向測驗</h1>
 
@@ -134,11 +136,9 @@ button:hover{
     <div class="resultText" id="text"></div>
 </div>
 
-<h3>📱 掃描 QR Code 分享結果網址</h3>
+<h3>📱 掃描 QR Code 下載您的測驗結果圖</h3>
 <div id="qrcode"></div>
 
-<!-- 新增：直接下載圖片按鈕 -->
-<button onclick="downloadResultImg()" id="downloadBtn" style="background: #4caf50;">📥 下載結果圖</button>
 <br>
 <button onclick="goHome()">回首頁</button>
 
@@ -146,118 +146,118 @@ button:hover{
 
 </div>
 
-<!-- 用於後台合成底圖與文字的畫布 -->
+<!-- 後台用來合成底圖與文字的畫布 (寬800 x 高1200，建議你的結果底圖也是這個比例) -->
 <canvas id="canvasWorker" width="800" height="1200"></canvas>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-// 在這裡設定你所有的圖片網址（建議使用絕對路徑，如 https://...）
+// ==========================================
+// 📝 圖片路徑指令預留區
+// 請將下方的檔案路徑替換成你實際的圖片資料夾與檔名
+// ==========================================
 const imagesConfig = {
-    home: "https://picsum.photos/600/400?random=1", // 首頁圖
-    bg1: "https://images.unsplash.com/photo-1597200381847-30ec200eeb9a?q=80&w=500", // 碰少速快 底圖 (晴天感)
-    bg2: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=500", // 碰少速慢 底圖 (雲霧感)
-    bg3: "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?q=80&w=500", // 碰多速快 底圖 (雷電感)
-    bg4: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=500"  // 碰多速慢 底圖 (雨天藝術)
+    home: "images/home_banner.jpg",    // 首頁圖片路徑
+    bg1:  "images/bg_sunny.jpg",       // 碰少速快 結果底圖路徑
+    bg2:  "images/bg_cloudy.jpg",      // 碰少速慢 結果底圖路徑
+    bg3:  "images/bg_thunder.jpg",     // 碰多速快 結果底圖路徑
+    bg4:  "images/bg_rainy.jpg"        // 碰多速慢 結果底圖路徑
 };
 
-let currentBgUrl = ""; // 紀錄當前結果底圖，方便 canvas 繪製
+// 初始化首頁圖片路徑
+document.getElementById("homeImg").src = imagesConfig.home;
 
 function startTest(){
+    let A = parseInt(document.getElementById("A").value);
+    let B = parseInt(document.getElementById("B").value);
 
-let A=parseInt(document.getElementById("A").value);
-let B=parseInt(document.getElementById("B").value);
+    if(isNaN(A) || isNaN(B)){
+        alert("請輸入數字！");
+        return;
+    }
 
-if(isNaN(A)||isNaN(B)){
-    alert("請輸入數字！");
-    return;
+    let title = "";
+    let text = "";
+    let bgUrl = "";
+
+    // 根據測驗結果分配對應的文字與預留底圖路徑
+    if(A <= 3 && B <= 13){
+        title = "碰少速快";
+        text = "你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。";
+        bgUrl = imagesConfig.bg1;
+    }else if(A <= 3 && B > 13){
+        title = "碰少速慢";
+        text = "你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。";
+        bgUrl = imagesConfig.bg2;
+    }else if(A > 3 && B <= 13){
+        title = "碰多速快";
+        text = "你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。";
+        bgUrl = imagesConfig.bg3;
+    }else{
+        title = "碰多速慢";
+        text = "你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。";
+        bgUrl = imagesConfig.bg4;
+    }
+
+    // 1. 動態更換當前網頁畫面的容器底圖
+    document.getElementById("mainContainer").style.backgroundImage = `url('${bgUrl}')`;
+    document.getElementById("title").innerHTML = title;
+    document.getElementById("text").innerHTML = text;
+
+    // 2. 切換頁面顯示
+    document.getElementById("homePage").style.display = "none";
+    document.getElementById("resultPage").style.display = "block";
+    document.getElementById("qrcode").innerHTML = "正在繪製結果圖，請稍候...";
+
+    // 3. 呼叫後台 Canvas 開始合成底圖與文字，並產生 QR Code
+    generateQRCodeWithImage(bgUrl, title, text);
 }
 
-let title="";
-let text="";
-let bgUrl="";
-
-// 2. 根據不同結果給予不同底圖
-if(A<=3 && B<=13){
-    title="碰少速快";
-    text="你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。";
-    bgUrl = imagesConfig.bg1;
-}else if(A<=3 && B>13){
-    title="碰少速慢";
-    text="你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。";
-    bgUrl = imagesConfig.bg2;
-}else if(A>3 && B<=13){
-    title="碰多速快";
-    text="你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。";
-    bgUrl = imagesConfig.bg3;
-}else{
-    title="碰多速慢";
-    text="你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。";
-    bgUrl = imagesConfig.bg4;
-}
-
-currentBgUrl = bgUrl;
-
-// 更換容器底圖
-document.getElementById("mainContainer").style.backgroundImage = `url('${bgUrl}')`;
-
-document.getElementById("title").innerHTML=title;
-document.getElementById("text").innerHTML=text;
-
-document.getElementById("homePage").style.display="none";
-document.getElementById("resultPage").style.display="block";
-
-document.getElementById("qrcode").innerHTML="";
-
-// QR Code 依然負責分享網址（讓別人也可以來測驗）
-new QRCode(document.getElementById("qrcode"),{
-    text: window.location.href,
-    width:180,
-    height:180
-});
-}
-
-// 3. 利用 Canvas 把底圖 + 文字結合成一張圖供民眾下載
-function downloadResultImg() {
+// 後台合成圖片並轉為 QR Code 的核心函式
+function generateQRCodeWithImage(bgUrl, title, text) {
     const canvas = document.getElementById("canvasWorker");
     const ctx = canvas.getContext("2d");
     const img = new Image();
     
-    // 解決跨域圖片無法下載的問題（圖片伺服器需支援 CORS）
-    img.crossOrigin = "Anonymous"; 
-    img.src = currentBgUrl;
-    
+    img.src = bgUrl;
     img.onload = function() {
-        // 畫底圖
+        // 步驟 A：繪製你提供的自訂底圖
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // 畫半透明文字底框，確保字體清晰
+        // 步驟 B：繪製文字的半透明白色襯底框（確保字在任何底圖上都清晰）
         ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-        ctx.borderRadius = 20;
         ctx.fillRect(50, 300, canvas.width - 100, 500);
         
-        // 寫入標題
+        // 步驟 C：寫入結果標題
         ctx.fillStyle = "#1565c0";
         ctx.font = "bold 50px Noto Sans TC, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(document.getElementById("title").innerText, canvas.width / 2, 420);
+        ctx.fillText(title, canvas.width / 2, 420);
         
-        // 寫入內容文字 (處理自動換行)
+        // 步驟 D：寫入結果內文（支援自動換行）
         ctx.fillStyle = "#333333";
         ctx.font = "36px Noto Sans TC, sans-serif";
-        const text = document.getElementById("text").innerText;
         wrapText(ctx, text, canvas.width / 2, 520, canvas.width - 200, 60);
         
-        // 轉換成圖片並下載
-        const imageData = canvas.toDataURL("image/jpeg");
-        const link = document.createElement("a");
-        link.download = "性向測驗結果.jpg";
-        link.href = imageData;
-        link.click();
+        // 步驟 E：將整張合成圖轉成 Base64 資料網址
+        const imageDataUrl = canvas.toDataURL("image/jpeg", 0.8); // 0.8 為圖片壓縮品質
+        
+        // 步驟 F：清空文字提示，將圖檔網址直接塞入 QR Code
+        document.getElementById("qrcode").innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), {
+            text: imageDataUrl,
+            width: 200,
+            height: 200
+        });
+    };
+    
+    // 預防圖片載入失敗的防錯機制
+    img.onerror = function() {
+        document.getElementById("qrcode").innerHTML = "圖片載入失敗，請檢查圖片路徑是否正確。";
     };
 }
 
-// 輔助函式：讓 Canvas 文字能自動換行
+// 輔助功能：讓 Canvas 內的文字能根據寬度自動換行
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
     let words = text.split('');
     let line = '';
@@ -278,14 +278,14 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
 }
 
 function goHome(){
-    document.getElementById("resultPage").style.display="none";
-    document.getElementById("homePage").style.display="block";
+    document.getElementById("resultPage").style.display = "none";
+    document.getElementById("homePage").style.display = "block";
 
-    // 還原首頁預設背景
+    // 還原網頁背景為預設值
     document.getElementById("mainContainer").style.backgroundImage = "none";
 
-    document.getElementById("A").value="";
-    document.getElementById("B").value="";
+    document.getElementById("A").value = "";
+    document.getElementById("B").value = "";
 }
 </script>
 
