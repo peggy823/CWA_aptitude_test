@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>下載您的測驗結果</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body {
+    margin: 0; padding: 20px; font-family: "Noto Sans TC", sans-serif;
+    background: #f0f4f8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
+}
+.info-text { margin-bottom: 15px; font-size: 16px; color: #555; text-align: center; font-weight: bold;}
+/* 讓生成的結果圖適應手機螢幕寬度 */
+#finalImage {
+    width: 100%; max-width: 360px; border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15); display: none;
+}
+#loading { font-size: 18px; color: #1976d2; }
+#canvasWorker { display: none; }
+</style>
+</head>
+<body>
+
+<div class="info-text" id="tipText">正在為您準備專屬結果圖...</div>
+<div id="loading">圖片生成中...</div>
+
+<!-- 這裏會顯示最終合成好的圖片，民眾只要對著它長按就可以儲存 -->
+<img id="finalImage" alt="您的測驗結果">
+
+<!-- 後台偷偷畫圖用的畫布 -->
+<canvas id="canvasWorker" width="800" height="1200"></canvas>
+
+<script>
+// ==========================================
+// 📝 圖片路徑指令預留區（手機端下載合成用）
+// 這裡的路徑請與 index.html 保持一致
+// ==========================================
+const imagesConfig = {
+    bg1:  "images/bg_sunny.jpg",
+    bg2:  "images/bg_cloudy.jpg",
+    bg3:  "images/bg_thunder.jpg",
+    bg4:  "images/bg_rainy.jpg"
+};
+
+// 解析網址後方的 ?type=X 參數
+const urlParams = new URLSearchParams(window.location.search);
+const type = urlParams.get('type');
+
+let title = "";
+let text = "";
+let bgUrl = "";
+
+// 根據代號決定手機端要合成的文字與底圖
+if(type === "1") {
+    title = "碰少速快";
+    text = "你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。";
+    bgUrl = imagesConfig.bg1;
+} else if(type === "2") {
+    title = "碰少速慢";
+    text = "你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。";
+    bgUrl = imagesConfig.bg2;
+} else if(type === "3") {
+    title = "碰多速快";
+    text = "你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。";
+    bgUrl = imagesConfig.bg3;
+} else if(type === "4") {
+    title = "碰多速慢";
+    text = "你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。";
+    bgUrl = imagesConfig.bg4;
+} else {
+    document.getElementById("loading").innerText = "找不到測驗結果，請重新測驗。";
+}
+
+if(bgUrl) {
+    drawAndRender(bgUrl, title, text);
+}
+
+function drawAndRender(bgUrl, title, text) {
+    const canvas = document.getElementById("canvasWorker");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    
+    img.src = bgUrl;
+    img.onload = function() {
+        // 1. 繪製自訂底圖
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 2. 繪製白色文字襯底框
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.fillRect(50, 300, canvas.width - 100, 500);
+        
+        // 3. 寫入標題
+        ctx.fillStyle = "#1565c0";
+        ctx.font = "bold 50px Noto Sans TC, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(title, canvas.width / 2, 420);
+        
+        // 4. 寫入內文（自動換行）
+        ctx.fillStyle = "#333333";
+        ctx.font = "36px Noto Sans TC, sans-serif";
+        wrapText(ctx, text, canvas.width / 2, 520, canvas.width - 200, 60);
+        
+        // 5. 輸出成真圖片並塞入 <img> 標籤
+        const finalImage = document.getElementById("finalImage");
+        finalImage.src = canvas.toDataURL("image/jpeg", 0.9);
+        
+        // 6. 隱藏載入中提示，顯示圖片
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("tipText").innerText = "💡 您的專屬結果圖已生成！請【長按圖片】儲存至手機相簿。";
+        finalImage.style.display = "block";
+    };
+    
+    img.onerror = function() {
+        document.getElementById("loading").innerText = "底圖載入失敗，請確認圖片路徑是否正確。";
+    };
+}
+
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+    let words = text.split('');
+    let line = '';
+    for(let n = 0; n < words.length; n++) {
+        let testLine = line + words[n];
+        let metrics = context.measureText(testLine);
+        let testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+            context.fillText(line, x, y);
+            line = words[n];
+            y += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    context.fillText(line, x, y);
+}
+</script>
+</body>
+</html>
