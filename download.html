@@ -30,7 +30,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const title = urlParams.get('title');
 const bg = urlParams.get('bg');
 
-// 💡 內文自動對照表（根據傳過來的 bg 圖片名稱，自動選取對應內文，不需在 download 檔維護明文）
+// 💡 內文自動對照表（根據傳過來的 bg 圖片名稱，自動選取對應內文）
 const textMap = {
     "bg_sunny.png": "思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
     "bg_cloudy.png": "能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
@@ -51,29 +51,58 @@ if (title && text && bg) {
 function drawAndRender(bgUrl, title, text) {
     const canvas = document.getElementById("canvasWorker");
     const ctx = canvas.getContext("2d");
-    const img = new Image();
     
+    // 🔥 強制將 Canvas 畫布改為「完美正方形」（例如 800 x 800）
+    canvas.width = 800;
+    canvas.height = 800;
+
+    const img = new Image();
     img.src = bgUrl;
     img.onload = function() {
-        // 1. 繪製背景
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // 2. 繪製白框
+        // 🎯 核心演算法：計算「等比例縮放 + 中央裁切」 (Object-fit: cover 邏輯)
+        let imgWidth = img.width;
+        let imgHeight = img.height;
+        let targetWidth = canvas.width;
+        let targetHeight = canvas.height;
+        
+        let sx, sy, sWidth, sHeight;
+        
+        // 比較圖片與畫布的寬高比
+        if (imgWidth / imgHeight > targetWidth / targetHeight) {
+            // 圖片太寬了，以高度為基準縮放，裁切兩側
+            sHeight = imgHeight;
+            sWidth = imgHeight * (targetWidth / targetHeight);
+            sx = (imgWidth - sWidth) / 2;
+            sy = 0;
+        } else {
+            // 圖片太高了，以寬度為基準縮放，裁切上下
+            sWidth = imgWidth;
+            sHeight = imgWidth * (targetHeight / targetWidth);
+            sx = 0;
+            sy = (imgHeight - sHeight) / 2;
+        }
+
+        // 1. 繪製背景：利用 9 個參數版本，達成完美裁切不拉伸！
+        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+        
+        // 2. 繪製中間的半透明文字白框 (在正方形裡重新微調位置，讓視覺置中)
         ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-        ctx.fillRect(50, 300, canvas.width - 100, 500);
+        // 參數說明：左邊距 60, 上邊距 220, 寬度 680, 高度 360
+        ctx.fillRect(60, 220, targetWidth - 120, 360);
         
-        // 3. 標題
+        // 3. 繪製標題
         ctx.fillStyle = "#1565c0";
-        ctx.font = "bold 50px Noto Sans TC, sans-serif";
+        ctx.font = "bold 44px Noto Sans TC, sans-serif"; // 稍微縮小字體符合正方形比例
         ctx.textAlign = "center";
-        ctx.fillText(title, canvas.width / 2, 420);
+        ctx.fillText(title, targetWidth / 2, 320);
         
-        // 4. 內文
+        // 4. 繪製內文
         ctx.fillStyle = "#333333";
-        ctx.font = "36px Noto Sans TC, sans-serif";
-        wrapText(ctx, text, canvas.width / 2, 520, canvas.width - 200, 60);
+        ctx.font = "32px Noto Sans TC, sans-serif";
+        wrapText(ctx, text, targetWidth / 2, 410, targetWidth - 200, 55);
         
-        // 5. 輸出實體圖片
+        // 5. 輸出實體圖片 (外觀由 CSS 的 max-width 控制，但下載一定是正方形)
         const finalImage = document.getElementById("finalImage");
         finalImage.src = canvas.toDataURL("image/jpeg", 0.9);
         
@@ -83,10 +112,11 @@ function drawAndRender(bgUrl, title, text) {
     };
     
     img.onerror = function() {
-        document.getElementById("loading").innerText = "結果底圖載入失敗，請確認網頁伺服器上的圖片路徑與檔名大小寫是否正確。";
+        document.getElementById("loading").innerText = "結果底圖載入失敗，請確認網頁伺服器上的圖片路徑。";
     };
 }
 
+// 自動換行演算法
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
     let words = text.split('');
     let line = '';
