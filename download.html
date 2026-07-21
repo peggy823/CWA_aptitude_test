@@ -25,37 +25,27 @@ body {
 <canvas id="canvasWorker" width="800" height="1200"></canvas>
 
 <script>
-const localConfig = {
-    type1: {
-        title: "碰少速快",
-        text: "你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
-        bg: "images/bg_sunny.jpg"
-    },
-    type2: {
-        title: "碰少速慢",
-        text: "你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
-        bg: "images/bg_cloudy.jpg"
-    },
-    type3: {
-        title: "碰多速快",
-        text: "你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。",
-        bg: "images/bg_thunder.jpg"
-    },
-    type4: {
-        title: "碰多速慢",
-        text: "你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。",
-        bg: "images/bg_rainy.jpg"
-    }
+// 從極簡網址中解析傳過來的資料
+const urlParams = new URLSearchParams(window.location.search);
+const title = urlParams.get('title');
+const bg = urlParams.get('bg');
+
+// 💡 內文自動對照表（根據傳過來的 bg 圖片名稱，自動選取對應內文，不需在 download 檔維護明文）
+const textMap = {
+    "bg_sunny.png": "思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
+    "bg_cloudy.png": "能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
+    "bg_thunder.png": "是充滿熱情活力的賽車手，常帶隔身邊的人歡笑和驚喜。",
+    "bg_rainy.png": "即使在大雨中仍保有幽默感，內心住著浪漫的靈魂。"
 };
 
-const urlParams = new URLSearchParams(window.location.search);
-const t = urlParams.get('t');
-let resData = localConfig["type" + t];
+// 從路徑中擷取純檔名 (例如把 "images/bg_sunny.png" 變成 "bg_sunny.png")
+let pureBgName = bg ? bg.substring(bg.lastIndexOf('/') + 1) : "";
+let text = textMap[pureBgName] || "";
 
-if (resData) {
-    drawAndRender(resData.bg, resData.title, resData.text);
+if (title && text && bg) {
+    drawAndRender(bg, title, text);
 } else {
-    document.getElementById("loading").innerText = "讀取資料失敗，參數不正確。";
+    document.getElementById("loading").innerText = "讀取資料失敗，請重新從大螢幕掃描 QR Code。";
 }
 
 function drawAndRender(bgUrl, title, text) {
@@ -65,20 +55,25 @@ function drawAndRender(bgUrl, title, text) {
     
     img.src = bgUrl;
     img.onload = function() {
+        // 1. 繪製背景
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
+        // 2. 繪製白框
         ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
         ctx.fillRect(50, 300, canvas.width - 100, 500);
         
+        // 3. 標題
         ctx.fillStyle = "#1565c0";
         ctx.font = "bold 50px Noto Sans TC, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(title, canvas.width / 2, 420);
         
+        // 4. 內文
         ctx.fillStyle = "#333333";
         ctx.font = "36px Noto Sans TC, sans-serif";
         wrapText(ctx, text, canvas.width / 2, 520, canvas.width - 200, 60);
         
+        // 5. 輸出實體圖片
         const finalImage = document.getElementById("finalImage");
         finalImage.src = canvas.toDataURL("image/jpeg", 0.9);
         
@@ -88,7 +83,7 @@ function drawAndRender(bgUrl, title, text) {
     };
     
     img.onerror = function() {
-        document.getElementById("loading").innerText = "結果底圖載入失敗。";
+        document.getElementById("loading").innerText = "結果底圖載入失敗，請確認網頁伺服器上的圖片路徑與檔名大小寫是否正確。";
     };
 }
 
