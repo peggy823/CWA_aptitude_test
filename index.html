@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>性向測驗</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    font-family:"Noto Sans TC",sans-serif;
+    background:linear-gradient(135deg,#b3e5fc,#e1f5fe);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+.container{
+    background:white;
+    width:90%;
+    max-width:500px;
+    border-radius:20px;
+    padding:30px;
+    text-align:center;
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+}
+
+h1{
+    color:#1976d2;
+}
+
+input{
+    width:90%;
+    padding:12px;
+    margin:10px 0 20px;
+    font-size:18px;
+    border-radius:10px;
+    border:2px solid #90caf9;
+    text-align:center;
+}
+
+button{
+    background:#2196f3;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    font-size:18px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+button:hover{
+    background:#1976d2;
+}
+
+#resultPage{
+    display:none;
+}
+
+.resultTitle{
+    font-size:28px;
+    color:#1565c0;
+    margin-bottom:20px;
+    font-weight:bold;
+}
+
+.resultText{
+    font-size:22px;
+    line-height:1.8;
+    margin-bottom:30px;
+}
+
+#qrcode{
+    margin:20px auto;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div id="homePage">
+
+<h1>🌦️ 性向測驗</h1>
+
+<h3>閃電次數(A)</h3>
+<input type="number" id="A">
+
+<h3>雨量儀顯示次數(B)</h3>
+<input type="number" id="B">
+
+<button onclick="startTest()">開始測驗</button>
+
+</div>
+
+<div id="resultPage">
+
+<div class="resultTitle" id="title"></div>
+
+<div class="resultText" id="text"></div>
+
+<h3>📱 掃描 QR Code 分享結果</h3>
+
+<div id="qrcode"></div>
+
+<br>
+
+<button onclick="goHome()">回首頁</button>
+
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+
+function startTest(){
+
+let A=parseInt(document.getElementById("A").value);
+let B=parseInt(document.getElementById("B").value);
+
+if(isNaN(A)||isNaN(B)){
+    alert("請輸入數字！");
+    return;
+}
+
+let title="";
+let text="";
+
+if(A<=3 && B<=13){
+
+title="碰少速快";
+
+text="你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。";
+
+}else if(A<=3 && B>13){
+
+title="碰少速慢";
+
+text="你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。";
+
+}else if(A>3 && B<=13){
+
+title="碰多速快";
+
+text="你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。";
+
+}else{
+
+title="碰多速慢";
+
+text="你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。";
+
+}
+
+document.getElementById("title").innerHTML=title;
+document.getElementById("text").innerHTML=text;
+
+document.getElementById("homePage").style.display="none";
+document.getElementById("resultPage").style.display="block";
+
+document.getElementById("qrcode").innerHTML="";
+
+new QRCode(document.getElementById("qrcode"),{
+    text:window.location.href,
+    width:180,
+    height:180
+});
+
+}
+
+function goHome(){
+
+document.getElementById("resultPage").style.display="none";
+document.getElementById("homePage").style.display="block";
+
+document.getElementById("A").value="";
+document.getElementById("B").value="";
+
+}
+
+</script>
+
+</body>
+</html>
