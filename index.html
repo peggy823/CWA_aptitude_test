@@ -64,23 +64,23 @@ const config = {
     homeImage: "images/home_banner.png", // 首頁圖路徑
     results: {
         type1: {
-            title: "測驗結果",
-            text: "你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
+            title: "你/妳是...【晴天的魔術師】",
+            text: "思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
             bg: "images/bg_sunny.png" // 📝【預留路徑】
         },
         type2: {
-            title: "測驗結果",
-            text: "你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
+            title: "你/妳是...【細心的小偵探】",
+            text: "能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
             bg: "images/bg_cloudy.png" // 📝【預留路徑】
         },
         type3: {
-            title: "測驗結果",
-            text: "你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。",
+            title: "你/妳就像雷電一樣",
+            text: "是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。",
             bg: "images/bg_thunder.png" // 📝【預留路徑】
         },
         type4: {
-            title: "測驗結果",
-            text: "你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。",
+            title: "你/妳是...【有幽默感的藝術家】",
+            text: "即使在大雨中仍保有幽默感，內心住著浪漫的靈魂。",
             bg: "images/bg_rainy.png" // 📝【預留路徑】
         }
     }
@@ -118,13 +118,12 @@ function startTest(){
     let currentUrl = window.location.href;
     let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
     
-    let urlParams = new URLSearchParams();
-    urlParams.append("bg", resData.bg);
-    urlParams.append("title", resData.title);
-    urlParams.append("text", resData.text);
+    // 使用 encodeURIComponent 確保中文在傳輸時不會壞掉
+    let paramBg = encodeURIComponent(resData.bg);
+    let paramTitle = encodeURIComponent(resData.title);
+    let paramText = encodeURIComponent(resData.text);
 
-    // 組裝後的網址會長這樣：download.html?bg=images/bg_sunny.jpg&title=...&text=...
-    let downloadPageUrl = `${baseUrl}/download.html?${urlParams.toString()}`;
+    let downloadPageUrl = `${baseUrl}/download.html?bg=${paramBg}&title=${paramTitle}&text=${paramText}`;
 
     new QRCode(document.getElementById("qrcode"), {
         text: downloadPageUrl,
