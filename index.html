@@ -4,54 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>性向測驗</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 <style>
 body{
-    margin:0;
-    font-family:"Noto Sans TC",sans-serif;
+    margin:0; font-family:"Noto Sans TC",sans-serif;
     background:linear-gradient(135deg,#b3e5fc,#e1f5fe);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
+    display:flex; justify-content:center; align-items:center; min-height:100vh;
 }
 .container{
-    background:white;
-    width:90%;
-    max-width:500px;
-    border-radius:20px;
-    padding:30px;
-    text-align:center;
-    box-shadow:0 10px 25px rgba(0,0,0,.15);
-    background-size: cover;
-    background-position: center;
-    transition: background 0.5s ease;
+    background:white; width:90%; max-width:500px; border-radius:20px; padding:30px; text-align:center;
+    box-shadow:0 10px 25px rgba(0,0,0,.15); background-size: cover; background-position: center; transition: background 0.5s ease;
 }
-.home-banner {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    border-radius: 15px;
-    margin-bottom: 15px;
-    display: block;
-}
+.home-banner { width: 100%; max-width: 100%; height: auto; border-radius: 15px; margin-bottom: 15px; display: block; }
 h1{ color:#1976d2; margin-top: 5px; }
-input{
-    width:90%; padding:12px; margin:10px 0 20px; font-size:18px;
-    border-radius:10px; border:2px solid #90caf9; text-align:center;
-}
-button{
-    background:#2196f3; color:white; border:none; padding:12px 25px;
-    font-size:18px; border-radius:10px; cursor:pointer; transition:.3s; margin: 5px;
-}
+input{ width:90%; padding:12px; margin:10px 0 20px; font-size:18px; border-radius:10px; border:2px solid #90caf9; text-align:center; }
+button{ background:#2196f3; color:white; border:none; padding:12px 25px; font-size:18px; border-radius:10px; cursor:pointer; transition:.3s; margin: 5px; }
 button:hover{ background:#1976d2; }
 #resultPage{ display:none; }
-.result-box {
-    background: rgba(255, 255, 255, 0.85);
-    padding: 20px;
-    border-radius: 15px;
-    margin-bottom: 20px;
-}
+.result-box { background: rgba(255, 255, 255, 0.85); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
 .resultTitle{ font-size:28px; color:#1565c0; margin-bottom:20px; font-weight:bold; }
 .resultText{ font-size:22px; line-height:1.8; }
 #qrcode{ margin:20px auto; display: flex; justify-content: center; }
@@ -62,7 +32,7 @@ button:hover{ background:#1976d2; }
 <div class="container" id="mainContainer">
 
     <div id="homePage">
-        <!-- 【預留路徑】首頁自訂設計圖 -->
+        <!-- 📝【預留路徑】首頁圖 -->
         <img src="images/home_banner.png" alt="首頁設計圖" class="home-banner" id="homeImg">
         <h1>🌦️ 性向測驗</h1>
         <h3>閃電次數(A)</h3>
@@ -88,17 +58,36 @@ button:hover{ background:#1976d2; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // ==========================================
-// 📝 圖片路徑指令預留區（主頁面顯示用）
+// 🎨 全域設定區：未來修改檔名、文字，只需改這裡！
 // ==========================================
-const imagesConfig = {
-    home: "images/home_banner.png",
-    bg1:  "images/bg_sunny.png",
-    bg2:  "images/bg_cloudy.png",
-    bg3:  "images/bg_thunder.png",
-    bg4:  "images/bg_rainy.png"
+const config = {
+    homeImage: "images/home_banner.png", // 首頁圖路徑
+    results: {
+        type1: {
+            title: "測驗結果",
+            text: "你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
+            bg: "images/bg_sunny.png" // 📝【預留路徑】
+        },
+        type2: {
+            title: "測驗結果",
+            text: "你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
+            bg: "images/bg_cloudy.png" // 📝【預留路徑】
+        },
+        type3: {
+            title: "測驗結果",
+            text: "你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。",
+            bg: "images/bg_thunder.png" // 📝【預留路徑】
+        },
+        type4: {
+            title: "測驗結果",
+            text: "你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。",
+            bg: "images/bg_rainy.png" // 📝【預留路徑】
+        }
+    }
 };
 
-document.getElementById("homeImg").src = imagesConfig.home;
+// 載入首頁圖
+document.getElementById("homeImg").src = config.homeImage;
 
 function startTest(){
     let A = parseInt(document.getElementById("A").value);
@@ -109,44 +98,34 @@ function startTest(){
         return;
     }
 
-    let title = "", text = "", bgUrl = "", resultType = "";
+    // 依據條件撈取 config 內的資料物件
+    let resData;
+    if(A <= 3 && B <= 13)      resData = config.results.type1;
+    else if(A <= 3 && B > 13)  resData = config.results.type2;
+    else if(A > 3 && B <= 13)  resData = config.results.type3;
+    else                       resData = config.results.type4;
 
-    if(A <= 3 && B <= 13){
-        title = "碰少速快";
-        text = "你是晴天的魔術師，思考敏捷又台風穩健，做事兼具效率與高品質的實力派。";
-        bgUrl = imagesConfig.bg1;
-        resultType = "1";
-    }else if(A <= 3 && B > 13){
-        title = "碰少速慢";
-        text = "你是細心的小偵探，能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。";
-        bgUrl = imagesConfig.bg2;
-        resultType = "2";
-    }else if(A > 3 && B <= 13){
-        title = "碰多速快";
-        text = "你就像雷電一樣，是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。";
-        bgUrl = imagesConfig.bg3;
-        resultType = "3";
-    }else{
-        title = "碰多速慢";
-        text = "你是即使在大雨中仍保有幽默感的藝術家，內心住著浪漫的靈魂。";
-        bgUrl = imagesConfig.bg4;
-        resultType = "4";
-    }
-
-    document.getElementById("mainContainer").style.backgroundImage = `url('${bgUrl}')`;
-    document.getElementById("title").innerHTML = title;
-    document.getElementById("text").innerHTML = text;
+    // 更新現場畫面
+    document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
+    document.getElementById("title").innerHTML = resData.title;
+    document.getElementById("text").innerHTML = resData.text;
 
     document.getElementById("homePage").style.display = "none";
     document.getElementById("resultPage").style.display = "block";
     document.getElementById("qrcode").innerHTML = "";
 
-    // 取得當前網頁的目錄路徑，動態指向同目錄底下的 download.html
+    // 【核心邏輯】把圖片路徑、標題、內文全部編碼進網址參數
     let currentUrl = window.location.href;
     let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-    let downloadPageUrl = `${baseUrl}/download.html?type=${resultType}`;
+    
+    let urlParams = new URLSearchParams();
+    urlParams.append("bg", resData.bg);
+    urlParams.append("title", resData.title);
+    urlParams.append("text", resData.text);
 
-    // 產生純網址的 QR Code，速度飛快且絕對不會消失
+    // 組裝後的網址會長這樣：download.html?bg=images/bg_sunny.jpg&title=...&text=...
+    let downloadPageUrl = `${baseUrl}/download.html?${urlParams.toString()}`;
+
     new QRCode(document.getElementById("qrcode"), {
         text: downloadPageUrl,
         width: 200,
