@@ -12,6 +12,7 @@ body{
     display:flex; justify-content:center; align-items:center; min-height:100vh;
 }
 .container{
+    position: relative;
     background:white; width:90%; max-width:500px; border-radius:20px; padding:30px; text-align:center;
     box-shadow:0 10px 25px rgba(0,0,0,.15); background-size: cover; background-position: center; transition: background 0.5s ease;
 }
@@ -21,10 +22,21 @@ input{ width:90%; padding:12px; margin:10px 0 20px; font-size:18px; border-radiu
 button{ background:#2196f3; color:white; border:none; padding:12px 25px; font-size:18px; border-radius:10px; cursor:pointer; transition:.3s; margin: 5px; }
 button:hover{ background:#1976d2; }
 #resultPage{ display:none; }
-.result-box { background: rgba(255, 255, 255, 0.85); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+.result-box { background: rgba(255, 255, 255, 0.85); padding: 30px 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; }
 .resultTitle{ font-size:28px; color:#1565c0; margin-bottom:20px; font-weight:bold; }
-.resultText{ font-size:22px; line-height:1.8; }
-#qrcode{ margin:20px auto; display: flex; justify-content: center; }
+.resultText{ font-size:22px; line-height:1.8;padding: 0 10px; }
+#qrcode {
+    position: absolute;  /* 👈 啟用絕對定位 */
+    right: 20px;        /* 👈 距離右邊邊界 20px */
+    bottom: 20px;       /* 👈 距離底部邊界 20px */
+    background: white;   /* 加上白色背景，在任何暗色底圖上都清晰 */
+    padding: 6px;        /* QR Code 周圍的白邊襯底 */
+    border-radius: 8px;  /* 讓 QR Code 邊角帶點圓弧 */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* 微微的陰影更有質感 */
+}
+#resultPage button {
+margin-top: 10px;
+}
 </style>
 </head>
 <body>
@@ -127,8 +139,8 @@ function startTest(){
 
     new QRCode(document.getElementById("qrcode"), {
         text: downloadPageUrl,
-        width: 200,
-        height: 200
+        width: 120,
+        height: 120
     });
 }
 
