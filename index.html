@@ -113,11 +113,11 @@ button:hover, .back-btn:hover {
     align-items: center;
 }
 
-/* 🎯 結果頁：預設隱藏 (none) */
+/* 🎯 結果頁：預設隱藏 (!important 避免 F5 顯示重疊) */
 #resultPage {
     width: 100%;
     height: 100%;
-    display: none; /* 💡 關鍵：預設直接藏起來，按 F5 就不會跑出來 */
+    display: none !important;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -125,34 +125,32 @@ button:hover, .back-btn:hover {
     box-sizing: border-box;
 }
 
-#homePage {
-    width: 100%;
-    display: flex;
-    flex-direction: column; /* 💡 關鍵：強制子元件（圖片、標題、輸入框）由上到下垂直排列 */
-    align-items: center;    /* 💡 讓所有內容水平居中 */
-}
-
-#resultPage {
-    width: 100%;
-    height: 100%;
-    display: none;
-    flex-direction: column;
-    justify-content: center;        /* 垂直居中 */
-    align-items: center;            /* 水平居中 */
-    padding: 30px 20px;
-    box-sizing: border-box;
-}
-
-/* 1. 結果卡片：純粹放文字，完全置中 */
+/* 1. 結果卡片：原本的文字卡片樣式與佈局完全保留 */
 .result-box {
+    position: relative; /* 作為長按透明層定位參考 */
     background: rgba(255, 255, 255, 0.85);
     padding: 35px 25px;
     border-radius: 15px;
     margin-bottom: 25px;
     text-align: center;
+    width: 100%;
+    max-width: 420px;
+    overflow: hidden;
 }
 .resultTitle { font-size:28px; color:#1565c0; margin-bottom:20px; font-weight:bold; }
 .resultText { font-size:21px; line-height:1.8; color: #333; }
+
+/* 📱 疊在文字卡片上的透明實體圖片 (觸發手機長按下載) */
+#longPressImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;               /* 完全透明，不影響原視覺呈現 */
+    -webkit-touch-callout: default; /* 確保 iOS 跳出長按功能選單 */
+    cursor: pointer;
+}
 
 /* 2. 卡片外的 QR Code 區塊：獨立置中 */
 .qr-outside-zone {
@@ -200,17 +198,22 @@ button:hover, .back-btn:hover {
         </div>
     </div>
 
-    <!-- 結果頁區塊 -->
+    <!-- 結果頁區塊 (保持原始佈局) -->
     <div id="resultPage">
-        <!-- (1) 置中的文字圖卡 -->
+        <!-- 隱藏畫布 (後台繪製下載圖用) -->
+        <canvas id="canvasWorker" style="display: none;"></canvas>
+
+        <!-- (1) 置中的文字圖卡（原呈現方式 + 長按功能） -->
         <div class="result-box">
             <div class="resultTitle" id="title"></div>
             <div class="resultText" id="text"></div>
+            <!-- 疊在卡片上的長按圖片層 -->
+            <img id="longPressImage" alt="長按儲存圖片">
         </div>
         
         <!-- (2) 圖卡外的 QR Code 置中區 -->
         <div class="qr-outside-zone">
-            <div class="qr-outside-tip">📱 掃描 QR Code 用手機下載結果圖</div>
+            <div class="qr-outside-tip">📱 掃描或長按文字框下載結果圖</div>
             <div id="qrcode"></div>
         </div>
 
@@ -293,14 +296,18 @@ function startTest(){
     document.getElementById("title").innerHTML = resData.title;
     document.getElementById("text").innerHTML = resData.text;
 
+    // 後台悄悄生成圖片，讓使用者長按中間文字框時能下載整張圖
+    prepareDownloadImage(resData.bg, resData.title, resData.text);
+
     document.getElementById("homePage").style.display = "none";
-    document.getElementById("resultPage").style.display = "flex";
+    
+    const resultPageElem = document.getElementById("resultPage");
+    resultPageElem.style.setProperty("display", "flex", "important");
     document.getElementById("qrcode").innerHTML = "";
 
     let currentUrl = window.location.href;
     let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
     
-    // 🔥【極致精簡】只傳送 1, 2, 3, 4 代號，完全避開中文，QR Code 絕對不會死白
     let downloadPageUrl = `${baseUrl}/download.html?t=${typeCode}`;
 
     new QRCode(document.getElementById("qrcode"), {
@@ -311,11 +318,84 @@ function startTest(){
 }
     
 function goHome(){
-    document.getElementById("resultPage").style.display = "none";
+    const resultPageElem = document.getElementById("resultPage");
+    resultPageElem.style.setProperty("display", "none", "important");
     document.getElementById("homePage").style.display = "flex";
     document.getElementById("mainContainer").style.backgroundImage = "none";
     document.getElementById("A").value = "";
     document.getElementById("B").value = "";
+}
+
+// 🎨 在背景生成結果圖片並附著於卡片上
+function prepareDownloadImage(bgUrl, title, text) {
+    const canvas = document.getElementById("canvasWorker");
+    const ctx = canvas.getContext("2d");
+
+    const img = new Image();
+    img.src = bgUrl;
+    img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        let W = canvas.width;
+        let H = canvas.height;
+
+        // 1. 繪製背景圖
+        ctx.drawImage(img, 0, 0, W, H);
+
+        // 2. 繪製白框
+        let boxWidth = W * 0.85;
+        let boxHeight = H * 0.42;
+        let boxX = (W - boxWidth) / 2;
+        let boxY = (H - boxHeight) / 2;
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 20);
+        } else {
+            ctx.rect(boxX, boxY, boxWidth, boxHeight);
+        }
+        ctx.fill();
+
+        // 3. 繪製標題
+        let titleFontSize = Math.round(W * 0.052);
+        ctx.fillStyle = "#1565c0";
+        ctx.font = `bold ${titleFontSize}px "Noto Sans TC", sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(title, W / 2, boxY + boxHeight * 0.3);
+
+        // 4. 繪製內文
+        let textFontSize = Math.round(W * 0.038);
+        let lineHeight = textFontSize * 1.6;
+        ctx.fillStyle = "#333333";
+        ctx.font = `${textFontSize}px "Noto Sans TC", sans-serif`;
+
+        wrapText(ctx, text, W / 2, boxY + boxHeight * 0.52, boxWidth * 0.82, lineHeight);
+
+        // 5. 賦予透明圖片 src 屬性，供手機使用者長按儲存
+        const longPressImg = document.getElementById("longPressImage");
+        longPressImg.src = canvas.toDataURL("image/jpeg", 0.95);
+    };
+}
+
+// 自動換行演算法
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+    let words = text.split('');
+    let line = '';
+    for(let n = 0; n < words.length; n++) {
+        let testLine = line + words[n];
+        let metrics = context.measureText(testLine);
+        let testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+            context.fillText(line, x, y);
+            line = words[n];
+            y += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    context.fillText(line, x, y);
 }
 </script>
 </body>

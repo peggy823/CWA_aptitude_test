@@ -81,7 +81,7 @@ function drawAndRender(bgUrl, title, text) {
         
         // 3. 動態計算卡片與文字大小（依照圖片比例自動縮放）
         let boxWidth = W * 0.85;                  // 卡片寬度為圖片的 85%
-        let boxHeight = H * 0.45;                 // 卡片高度為圖片的 45%
+        let boxHeight = H * 0.42;                 // 卡片高度為圖片的 45%
         let boxX = (W - boxWidth) / 2;            // 水平居中
         let boxY = (H - boxHeight) / 2;           // 垂直居中
 
@@ -124,7 +124,6 @@ function drawAndRender(bgUrl, title, text) {
         document.getElementById("loading").innerText = "結果底圖載入失敗，請確認網頁伺服器上的圖片路徑。";
     };
 }
-
 
 // 自動換行演算法
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
