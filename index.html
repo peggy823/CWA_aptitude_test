@@ -41,36 +41,36 @@ body {
 .home-card-bg {
     width: 100%;
     height: 100%;
-    background-size: contain;      /* 💡 100% 完整顯示圖片，絕不裁切 */
-    background-repeat: no-repeat;  /* 防止重複 */
-    background-position: center;   /* 居中顯示 */
+    background-size: contain;      /* 圖片完整顯示不裁切 */
+    background-repeat: no-repeat;
+    background-position: center;
     padding: 40px 20px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;         /* 讓卡片內部的標題、選單與按鈕由上到下垂直排列 */
+    justify-content: center;        /* 垂直居中 */
+    align-items: center;            /* 水平居中 */
 }
 
-/* 疊在背景圖上的標題與文字樣式（改為深灰色/黑色） */
+/* 疊在背景圖上的標題與文字樣式（深灰色/黑色） */
 .home-card-bg h1 {
-    color: #222222; /* 深灰色 */
+    color: #222222;
     font-size: 28px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 20px;
-    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8); /* 使用白色微陰影襯托，避免背景深色時吃字 */
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
 }
 
 .home-card-bg h3 {
-    color: #222222; /* 深灰色 */
+    color: #222222;
     font-size: 18px;
     font-weight: bold;
     margin: 12px 0 5px 0;
     text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
 }
 
-/* 輸入框樣式 */
-.home-card-bg input {
+/* 🔽 下拉選單選框樣式 */
+.home-card-bg select {
     width: 80%;
     max-width: 300px;
     padding: 12px;
@@ -83,11 +83,13 @@ body {
     text-align: center;
     outline: none;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    cursor: pointer;
+    text-align-last: center;
 }
 
-/* 按鈕樣式 */
-button {
-    background: #1E3A52;
+/* 🔘 統一按鈕通用樣式（包含「開始測驗」與「回首頁」） */
+button, .back-btn {
+    background: #1E3A52; /* 預設藍色，可自行修改 */
     color: white;
     border: none;
     padding: 12px 30px;
@@ -98,7 +100,9 @@ button {
     margin-top: 10px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-button:hover { background: #1976d2; }
+button:hover, .back-btn:hover { 
+    background: #1976d2; /* 滑鼠懸停時深藍色 */
+}
 
 #homePage, #resultPage {
     width: 100%;
@@ -106,11 +110,19 @@ button:hover { background: #1976d2; }
 }
 
 #homePage {
+    width: 100%;
     display: flex;
+    flex-direction: column; /* 💡 關鍵：強制子元件（圖片、標題、輸入框）由上到下垂直排列 */
+    align-items: center;    /* 💡 讓所有內容水平居中 */
 }
 
 #resultPage {
-    display: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;        /* 垂直居中 */
+    align-items: center;            /* 水平居中 */
     padding: 30px 20px;
     box-sizing: border-box;
 }
@@ -151,13 +163,6 @@ button:hover { background: #1976d2; }
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     display: inline-block;
 }
-
-/* 5. 最下方的回首頁按鈕 */
-.back-btn {
-    margin-top: 10px;
-    background: #78909c; 
-}
-.back-btn:hover { background: #546e7a; }
 </style>
 </head>
 <body>
@@ -170,10 +175,10 @@ button:hover { background: #1976d2; }
             <h1>🌤️ 性向測驗 🌦️</h1>
             
             <h3>閃電次數(A)</h3>
-            <input type="number" id="A">
+            <select id="A"></select>
             
             <h3>雨量儀顯示次數(B)</h3>
-            <input type="number" id="B">
+            <select id="B"></select>
             
             <button onclick="startTest()">開始測驗</button>
         </div>
@@ -235,14 +240,32 @@ const config = {
 // 將 JS 設定中的 homeImage 動態套用為首頁圖卡的 background-image
 document.getElementById("homeCard").style.backgroundImage = `url('${config.homeImage}')`;
 
-function startTest(){
-    let A = parseInt(document.getElementById("A").value);
-    let B = parseInt(document.getElementById("B").value);
+// ⚡ 自動生成選單選項的函式 (0 到 maxNum)
+function populateSelect(selectId, maxNum) {
+    const selectElem = document.getElementById(selectId);
+    let htmlOptions = `<option value="">請選擇數字</option>`;
+    for (let i = 0; i <= maxNum; i++) {
+        htmlOptions += `<option value="${i}">${i}</option>`;
+    }
+    selectElem.innerHTML = htmlOptions;
+}
 
-    if(isNaN(A) || isNaN(B)){
-        alert("請輸入數字！");
+// 頁面載入時生成選單：A 上限 30，B 上限 100
+populateSelect("A", 30);
+populateSelect("B", 100);
+
+function startTest(){
+    let valA = document.getElementById("A").value;
+    let valB = document.getElementById("B").value;
+
+    // 檢查是否有選取數字
+    if(valA === "" || valB === ""){
+        alert("請選擇數字！");
         return;
     }
+
+    let A = parseInt(valA);
+    let B = parseInt(valB);
 
     let resData, typeCode = "";
     if(A <= 3 && B <= 13)      { resData = config.results.type1; typeCode = "1"; }
@@ -255,7 +278,7 @@ function startTest(){
     document.getElementById("text").innerHTML = resData.text;
 
     document.getElementById("homePage").style.display = "none";
-    document.getElementById("resultPage").style.display = "block";
+    document.getElementById("resultPage").style.display = "flex";
     document.getElementById("qrcode").innerHTML = "";
 
     let currentUrl = window.location.href;
