@@ -65,54 +65,55 @@ if (currentData) {
 function drawAndRender(bgUrl, title, text) {
     const canvas = document.getElementById("canvasWorker");
     const ctx = canvas.getContext("2d");
-    
-    // 強制正方形畫布
-    canvas.width = 800;
-    canvas.height = 800;
 
     const img = new Image();
     img.src = bgUrl;
     img.onload = function() {
-        // 🎯 完美裁切不拉伸演算法 (Object-fit: cover)
-        let imgWidth = img.width;
-        let imgHeight = img.height;
-        let targetWidth = canvas.width;
-        let targetHeight = canvas.height;
-        let sx, sy, sWidth, sHeight;
-        
-        if (imgWidth / imgHeight > targetWidth / targetHeight) {
-            sHeight = imgHeight;
-            sWidth = imgHeight * (targetWidth / targetHeight);
-            sx = (imgWidth - sWidth) / 2;
-            sy = 0;
-        } else {
-            sWidth = imgWidth;
-            sHeight = imgWidth * (targetHeight / targetWidth);
-            sx = 0;
-            sy = (imgHeight - sHeight) / 2;
-        }
+        // 1. 💡 讓 Canvas 畫布的尺寸與背景原圖的比例完全一致（不裁切、不變形）
+        canvas.width = img.width;
+        canvas.height = img.height;
 
-        // 繪製背景
-        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+        let W = canvas.width;
+        let H = canvas.height;
+
+        // 2. 完整繪製背景圖片（完整呈現，不裁切）
+        ctx.drawImage(img, 0, 0, W, H);
         
+        // 3. 動態計算卡片與文字大小（依照圖片比例自動縮放）
+        let boxWidth = W * 0.85;                  // 卡片寬度為圖片的 85%
+        let boxHeight = H * 0.45;                 // 卡片高度為圖片的 45%
+        let boxX = (W - boxWidth) / 2;            // 水平居中
+        let boxY = (H - boxHeight) / 2;           // 垂直居中
+
         // 繪製文字半透明白框
-        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-        ctx.fillRect(60, 220, targetWidth - 120, 360);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+        ctx.beginPath();
+        // 繪製圓角矩形 (圓角為 20px)
+        if (ctx.roundRect) {
+            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 20);
+        } else {
+            ctx.rect(boxX, boxY, boxWidth, boxHeight);
+        }
+        ctx.fill();
         
-        // 繪製標題
+        // 4. 動態計算標題字級與位置
+        let titleFontSize = Math.round(W * 0.052); // 根據畫布寬度自動設定字體大小
         ctx.fillStyle = "#1565c0";
-        ctx.font = "bold 44px Noto Sans TC, sans-serif";
+        ctx.font = `bold ${titleFontSize}px "Noto Sans TC", sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText(title, targetWidth / 2, 320);
+        ctx.fillText(title, W / 2, boxY + boxHeight * 0.3);
         
-        // 繪製內文
+        // 5. 動態計算內文字級與位置
+        let textFontSize = Math.round(W * 0.038);
+        let lineHeight = textFontSize * 1.6;
         ctx.fillStyle = "#333333";
-        ctx.font = "32px Noto Sans TC, sans-serif";
-        wrapText(ctx, text, targetWidth / 2, 410, targetWidth - 200, 55);
+        ctx.font = `${textFontSize}px "Noto Sans TC", sans-serif`;
         
-        // 輸出實體圖片
+        wrapText(ctx, text, W / 2, boxY + boxHeight * 0.52, boxWidth * 0.85, lineHeight);
+        
+        // 6. 輸出實體圖片（預設允許長按下載/儲存相簿）
         const finalImage = document.getElementById("finalImage");
-        finalImage.src = canvas.toDataURL("image/jpeg", 0.9);
+        finalImage.src = canvas.toDataURL("image/jpeg", 0.95);
         
         document.getElementById("loading").style.display = "none";
         document.getElementById("tipText").innerText = "💡 您的專屬結果圖已生成！請【長按圖片】儲存至手機相簿。";
@@ -123,6 +124,7 @@ function drawAndRender(bgUrl, title, text) {
         document.getElementById("loading").innerText = "結果底圖載入失敗，請確認網頁伺服器上的圖片路徑。";
     };
 }
+
 
 // 自動換行演算法
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
