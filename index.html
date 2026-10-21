@@ -15,9 +15,38 @@ body{
     background:white; width:90%; max-width:500px; border-radius:20px; padding:30px; text-align:center;
     box-shadow:0 10px 25px rgba(0,0,0,.15); background-size: cover; background-position: center; transition: background 0.5s ease;
 }
-.home-banner { width: 100%; max-width: 100%; height: auto; border-radius: 15px; margin-bottom: 15px; display: block; }
-h1{ color:#1976d2; margin-top: 5px; }
-input{ width:90%; padding:12px; margin:10px 0 20px; font-size:18px; border-radius:10px; border:2px solid #90caf9; text-align:center; }
+
+/* 🖼️ + ✍️ 圖片與文字重疊容器 */
+.banner-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    overflow: hidden; /* 防止圖片圓角溢出 */
+}
+
+.home-banner { 
+    width: 100%; 
+    height: auto; 
+    display: block; 
+}
+
+/* 疊在圖片上的標題文字 styling */
+.banner-title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* 絕對置中 */
+    color: #ffffff;                    /* 白色字體 */
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+    width: 90%;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); /* 加入陰影，確保在淡色背景圖片上也能清晰閱讀 */
+    pointer-events: none;
+}
+
+input{ width:90%; padding:12px; margin:10px 0 20px; font-size:18px; border-radius:10px; border:2px solid #90caf9; text-align:center; box-sizing: border-box; }
 button{ background:#2196f3; color:white; border:none; padding:12px 25px; font-size:18px; border-radius:10px; cursor:pointer; transition:.3s; margin: 5px; }
 button:hover{ background:#1976d2; }
 #resultPage{ display:none; }
@@ -73,12 +102,17 @@ button:hover{ background:#1976d2; }
 
     <!-- 首頁區塊 -->
     <div id="homePage">
-        <img src="images/home_banner.png" alt="首頁設計圖" class="home-banner" id="homeImg">
-        <h1>🌤️ 性向測驗 🌦️</h1>
+        <!-- 將圖片與標題包在同一個相對定位的容器內 -->
+        <div class="banner-container">
+            <img src="images/home_banner.png" alt="首頁設計圖" class="home-banner" id="homeImg">
+            <h1 class="banner-title">🌤️ 性向測驗 🌦️</h1>
+        </div>
+
         <h3>閃電次數(A)</h3>
         <input type="number" id="A">
         <h3>雨量儀顯示次數(B)</h3>
         <input type="number" id="B">
+        <br>
         <button onclick="startTest()">開始測驗</button>
     </div>
 
