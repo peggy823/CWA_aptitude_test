@@ -165,9 +165,14 @@ button:hover, .back-btn:hover {
 /* 3. 卡片外的提示文字 */
 .qr-outside-tip {
     font-size: 14px;
-    color: #444;
     font-weight: bold;
+    color: #ffffff; /* 改為白色文字 */
     margin-bottom: 10px;
+    padding: 4px 12px;
+    background: rgba(0, 0, 0, 0.4); /* 加上微透明深色襯底，確保文字突出 */
+    border-radius: 20px;
+    /* 加上多重文字陰影，即使在極亮背景下白色文字也很清楚 */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 /* 4. QR Code 白色襯底 */
@@ -237,22 +242,22 @@ const config = {
         type1: {
             title: "你/妳是...【晴天的魔術師】",
             text: "思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
-            bg: "images/bg_sunny.png" 
+            bg: "images/bg_sunny.png, tipColor: "#333333"" 
         },
         type2: {
             title: "你/妳是...【細心的小偵探】",
             text: "能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
-            bg: "images/bg_cloudy.png" 
+            bg: "images/bg_cloudy.png, tipColor: "#333333"" 
         },
         type3: {
             title: "你/妳就像雷電一樣",
-            text: "是充滿熱情活力的賽車手，常帶隔身邊的人歡笑和驚喜。",
-            bg: "images/bg_thunder.png" 
+            text: "是充滿熱情活力的賽車手，常帶給身邊的人歡笑和驚喜。",
+            bg: "images/bg_thunder.png, tipColor: "#ffffff"" 
         },
         type4: {
             title: "你/妳是...【有幽默感的藝術家】",
             text: "即使在大雨中仍保有幽默感，內心住著浪漫的靈魂。",
-            bg: "images/bg_rainy.png" 
+            bg: "images/bg_rainy.png, tipColor: "#ffffff"" 
         }
     }
 };
@@ -296,6 +301,9 @@ function startTest(){
     document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
     document.getElementById("title").innerHTML = resData.title;
     document.getElementById("text").innerHTML = resData.text;
+
+    // 動態切換提示文字顏色
+    document.querySelector(".qr-outside-tip").style.color = resData.tipColor;
 
     // 後台悄悄生成圖片，讓使用者長按中間文字框時能下載整張圖
     prepareDownloadImage(resData.bg, resData.title, resData.text);
