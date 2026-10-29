@@ -252,7 +252,7 @@ button:hover, .back-btn:hover {
 <!-- 轉場動畫 Overlay -->
 <div id="loadingOverlay">
     <div class="cloud-loader">🌩️</div>
-    <div class="loading-text">正在分析您的氣象性格...</div>
+    <div class="loading-text" id="loadingText">正在分析您的氣象性格...</div>
 </div>
 
 <div class="container" id="mainContainer">
@@ -346,6 +346,23 @@ function populateSelect(selectId, maxNum) {
 populateSelect("A", 30);
 populateSelect("B", 100);
 
+function getResultByInput(A, B) {
+    if (A <= 3 && B <= 13)      return { data: config.results.type1, code: "1" };
+    else if (A <= 3 && B > 13)  return { data: config.results.type2, code: "2" };
+    else if (A > 3 && B <= 13)  return { data: config.results.type3, code: "3" };
+    else                        return { data: config.results.type4, code: "4" };
+}
+
+// 預先載入圖片（成功或失敗都 resolve，避免卡住流程）
+function preloadImage(url) {
+    return new Promise(resolve => {
+        const im = new Image();
+        im.onload = () => resolve(true);
+        im.onerror = () => resolve(false);
+        im.src = url;
+    });
+}
+
 function checkInputs() {
     let valA = document.getElementById("A").value;
     let valB = document.getElementById("B").value;
@@ -353,10 +370,12 @@ function checkInputs() {
     
     if (valA !== "" && valB !== "") {
         errorTip.classList.remove("show");
+        // 玩家選完數字、還沒按開始時，就先偷偷載入對應結果圖
+        preloadImage(getResultByInput(parseInt(valA), parseInt(valB)).data.bg);
     }
 }
 
-function startTest(){
+async function startTest(){
     let valA = document.getElementById("A").value;
     let valB = document.getElementById("B").value;
     const errorTip = document.getElementById("errorTip");
@@ -369,40 +388,49 @@ function startTest(){
     errorTip.classList.remove("show");
 
     const loadingOverlay = document.getElementById("loadingOverlay");
+    const loadingText = document.getElementById("loadingText");
+    loadingText.innerText = "正在分析您的氣象性格...";
     loadingOverlay.style.display = "flex";
+
+    // 等太久時，換一句提示，讓玩家知道沒有當掉
+    const slowTimer = setTimeout(() => {
+        loadingText.innerText = "高解析度結果圖生成中，請稍候...";
+    }, 3000);
 
     let A = parseInt(valA);
     let B = parseInt(valB);
-
-    let resData, typeCode = "";
-    if(A <= 3 && B <= 13)      { resData = config.results.type1; typeCode = "1"; }
-    else if(A <= 3 && B > 13)  { resData = config.results.type2; typeCode = "2"; }
-    else if(A > 3 && B <= 13)  { resData = config.results.type3; typeCode = "3"; }
-    else                       { resData = config.results.type4; typeCode = "4"; }
+    const { data: resData, code: typeCode } = getResultByInput(A, B);
 
     currentShareUrl = new URL(`download.html?t=${typeCode}`, window.location.href).href;
 
-    prepareDownloadImage(resData.bg, resData.title, resData.text);
+    // 三件事都完成才顯示結果：①最短動畫時間 ②結果圖載入並完成合成 ③上限 12 秒保險，避免永遠卡住
+    const minWait = new Promise(r => setTimeout(r, 1500));
+    const maxWait = new Promise(r => setTimeout(r, 12000));
+    const ready = Promise.all([
+        prepareDownloadImage(resData.bg, resData.title, resData.text),
+        preloadImage(resData.bg),
+        minWait
+    ]);
+    await Promise.race([ready, maxWait]);
+    clearTimeout(slowTimer);
 
-    setTimeout(() => {
-        loadingOverlay.style.display = "none";
+    loadingOverlay.style.display = "none";
 
-        document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
-        document.getElementById("title").innerHTML = resData.title;
-        document.getElementById("text").innerHTML = resData.text;
+    document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
+    document.getElementById("title").innerHTML = resData.title;
+    document.getElementById("text").innerHTML = resData.text;
 
-        document.getElementById("homePage").style.display = "none";
-        
-        const resultPageElem = document.getElementById("resultPage");
-        resultPageElem.style.setProperty("display", "flex", "important");
-        document.getElementById("qrcode").innerHTML = "";
+    document.getElementById("homePage").style.display = "none";
 
-        new QRCode(document.getElementById("qrcode"), {
-            text: currentShareUrl,
-            width: 90,
-            height: 90
-        });
-    }, 1500);
+    const resultPageElem = document.getElementById("resultPage");
+    resultPageElem.style.setProperty("display", "flex", "important");
+    document.getElementById("qrcode").innerHTML = "";
+
+    new QRCode(document.getElementById("qrcode"), {
+        text: currentShareUrl,
+        width: 90,
+        height: 90
+    });
 }
     
 function goHome(){
@@ -436,6 +464,7 @@ async function shareResult() {
 }
 
 function prepareDownloadImage(bgUrl, title, text) {
+  return new Promise(resolve => {
     const canvas = document.getElementById("canvasWorker");
     const ctx = canvas.getContext("2d");
 
@@ -498,7 +527,11 @@ function prepareDownloadImage(bgUrl, title, text) {
         
         const longPressImg = document.getElementById("longPressImage");
         longPressImg.src = generatedDataURL;
+        try { await longPressImg.decode(); } catch (e) {}  // 等圖片解碼完成再顯示
+        resolve();
     };
+    img.onerror = () => resolve();
+  });
 }
 
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
