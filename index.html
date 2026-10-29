@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>性格測驗</title>
 <link rel="preload" as="image" href="images/home_banner.png">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 <style>
 * {
     box-sizing: border-box;
@@ -288,14 +288,15 @@ button:hover, .back-btn:hover {
 
         <!-- 功能按鈕組 -->
         <div class="action-btn-group">
-            <button onclick="downloadResultImage()">📥 下載圖片</button>
+            <button onclick="saveImage()">📥 儲存圖片</button>
             <button onclick="shareResult()">🔗 分享結果</button>
             <button class="back-btn" onclick="goHome()" style="background: #475569;">回首頁</button>
         </div>
         
         <!-- (2) QR Code 區與清晰提示 -->
         <div class="qr-outside-zone">
-            <div class="qr-outside-tip">💡 手機請【長按上方卡片】直接存入相簿</div>
+            <div class="qr-outside-tip">💡 點【儲存圖片】，或長按上方卡片存入相簿</div>
+            <a href="#" onclick="showSaveOverlay();return false;" style="color:#fff;font-size:13px;text-decoration:underline;margin-bottom:8px;text-shadow:0 1px 3px rgba(0,0,0,.8)">按了沒反應？點這裡</a>
             <div id="qrcode"></div>
         </div>
     </div>
@@ -381,9 +382,7 @@ function startTest(){
     else if(A > 3 && B <= 13)  { resData = config.results.type3; typeCode = "3"; }
     else                       { resData = config.results.type4; typeCode = "4"; }
 
-    let currentUrl = window.location.href;
-    let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-    currentShareUrl = `${baseUrl}/download.html?t=${typeCode}`;
+    currentShareUrl = new URL(`download.html?t=${typeCode}`, window.location.href).href;
 
     prepareDownloadImage(resData.bg, resData.title, resData.text);
 
@@ -409,6 +408,8 @@ function startTest(){
 }
     
 function goHome(){
+    const so = document.getElementById("saveOverlay");
+    if (so) so.remove();
     const resultPageElem = document.getElementById("resultPage");
     resultPageElem.style.setProperty("display", "none", "important");
     document.getElementById("homePage").style.display = "flex";
@@ -418,14 +419,61 @@ function goHome(){
     document.getElementById("errorTip").classList.remove("show");
 }
 
-function downloadResultImage() {
+function isInAppBrowser() {
+    return /Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent);
+}
+
+function showSaveOverlay() {
+    if (!generatedDataURL || document.getElementById("saveOverlay")) return;
+    const ov = document.createElement("div");
+    ov.id = "saveOverlay";
+    ov.style.cssText = "position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.88);" +
+        "display:flex;flex-direction:column;align-items:center;justify-content:center;" +
+        "padding:20px;color:#fff;text-align:center;";
+    ov.innerHTML = `
+        <div style="font-size:17px;font-weight:bold;margin-bottom:12px">👇 長按下方圖片，選擇「儲存圖片」</div>
+        <img src="${generatedDataURL}" style="max-width:90%;max-height:60vh;border-radius:10px">
+        <div style="font-size:13px;margin-top:12px;opacity:.9">若無法儲存，請點右上角「⋯」，用 Safari／Chrome 開啟</div>
+        <button onclick="document.getElementById('saveOverlay').remove()">關閉</button>`;
+    document.body.appendChild(ov);
+}
+
+async function downloadResultImage() {
     if (!generatedDataURL) return;
+    const blob = await (await fetch(generatedDataURL)).blob();
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = generatedDataURL;
+    a.href = url;
     a.download = "personality_test_result.jpg";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+async function saveImage() {
+    if (!generatedDataURL) return;
+
+    // 內建瀏覽器（Line / IG / FB）：下載會失效，直接顯示可長按的大圖
+    if (isInAppBrowser()) { showSaveOverlay(); return; }
+
+    // iPhone：走系統分享選單，可直接「儲存影像」到相簿
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (isIOS && navigator.canShare) {
+        try {
+            const blob = await (await fetch(generatedDataURL)).blob();
+            const file = new File([blob], "personality_test_result.jpg", { type: "image/jpeg" });
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file] });
+                return;
+            }
+        } catch (err) {
+            if (err.name === "AbortError") return; // 使用者自己取消
+        }
+    }
+    // Android、電腦：直接下載
+    downloadResultImage();
 }
 
 async function shareResult() {
@@ -454,7 +502,13 @@ function prepareDownloadImage(bgUrl, title, text) {
 
     const img = new Image();
     img.src = bgUrl;
-    img.onload = function() {
+    img.onload = async function() {
+        try {
+            await Promise.all([
+                document.fonts.load('bold 20px "Noto Sans TC"', title + text),
+                document.fonts.load('20px "Noto Sans TC"', title + text)
+            ]);
+        } catch (e) {}
         canvas.width = img.width;
         canvas.height = img.height;
 
@@ -524,6 +578,15 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
         }
     }
     context.fillText(line, x, y);
+}
+
+// 內建瀏覽器提示條
+if (isInAppBrowser()) {
+    const bar = document.createElement("div");
+    bar.textContent = "⚠️ 建議點右上角「⋯」，用 Safari／Chrome 開啟，才能順利儲存圖片";
+    bar.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:10000;background:#d32f2f;" +
+        "color:#fff;padding:8px 10px;text-align:center;font-size:13px;font-weight:bold;";
+    document.body.appendChild(bar);
 }
 
 // ⏱️ 60 秒閒置自動重置
