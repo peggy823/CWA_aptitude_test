@@ -19,7 +19,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 100dvh;
 }
 
 /* 滿版主要容器 */
@@ -75,7 +75,7 @@ body {
     width: 80%;
     max-width: 300px;
     padding: 12px;
-    margin: 5px 0 15px;
+    margin: 5px 0 5px;
     font-size: 18px;
     border-radius: 10px;
     border: 2px solid #90caf9;
@@ -88,21 +88,57 @@ body {
     text-align-last: center;
 }
 
-/* 🔘 統一按鈕通用樣式（包含「開始測驗」與「回首頁」） */
+/* ⚠️ 1. 無 alert 的未選擇提示紅字 */
+.error-tip {
+    color: #d32f2f;
+    font-size: 14px;
+    font-weight: bold;
+    height: 20px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+    visibility: hidden;
+}
+.error-tip.show {
+    visibility: visible;
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* 🔘 統一按鈕通用樣式 */
 button, .back-btn {
-    background: #1E3A52; /* 預設藍色，可自行修改 */
+    background: #1E3A52; /* 預設藍色 */
     color: white;
     border: none;
-    padding: 12px 30px;
-    font-size: 18px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
     border-radius: 10px;
     cursor: pointer;
     transition: .3s;
-    margin-top: 10px;
+    margin: 4px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
 }
 button:hover, .back-btn:hover { 
     background: #1976d2; /* 滑鼠懸停時深藍色 */
+}
+
+/* 功能按鈕組 (下載/分享/回首頁) */
+.action-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
 }
 
 /* 🏠 首頁：預設顯示 (Flex) */
@@ -130,26 +166,26 @@ button:hover, .back-btn:hover {
 .result-box {
     position: relative; /* 作為長按透明層定位參考 */
     background: rgba(255, 255, 255, 0.85);
-    padding: 35px 25px;
+    padding: 30px 22px;
     border-radius: 15px;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
     text-align: center;
     width: 100%;
     max-width: 420px;
     overflow: hidden;
 }
-.resultTitle { font-size:28px; color:#1565c0; margin-bottom:20px; font-weight:bold; }
-.resultText { font-size:21px; line-height:1.8; color: #333; }
+.resultTitle { font-size:26px; color:#1565c0; margin-bottom:15px; font-weight:bold; }
+.resultText { font-size:19px; line-height:1.7; color: #333; }
 
-/* 📱 疊在文字卡片上的透明實體圖片 (觸發手機長按下載) */
+/* 📱 疊在文字卡片上的透明實體圖片 (保留備用長按觸發) */
 #longPressImage {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0;               /* 完全透明，不影響原視覺呈現 */
-    -webkit-touch-callout: default; /* 確保 iOS 跳出長按功能選單 */
+    opacity: 0;               /* 完全透明 */
+    -webkit-touch-callout: default;
     cursor: pointer;
 }
 
@@ -159,20 +195,18 @@ button:hover, .back-btn:hover {
     flex-direction: column;
     align-items: center; 
     justify-content: center;
-    margin-bottom: 25px;
 }
 
 /* 3. 卡片外的提示文字 */
 .qr-outside-tip {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
-    color: #ffffff; /* 改為白色文字 */
-    margin-bottom: 10px;
+    color: #ffffff;
+    margin-bottom: 8px;
     padding: 4px 12px;
-    background: rgba(0, 0, 0, 0.4); /* 加上微透明深色襯底，確保文字突出 */
+    background: rgba(0, 0, 0, 0.4);
     border-radius: 20px;
-    /* 加上多重文字陰影，即使在極亮背景下白色文字也很清楚 */
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 5px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 /* 4. QR Code 白色襯底 */
@@ -183,9 +217,43 @@ button:hover, .back-btn:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     display: inline-block;
 }
+
+/* ⏳ 2. 轉場動畫 overlay */
+#loadingOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.92);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    color: white;
+}
+.cloud-loader {
+    font-size: 60px;
+    animation: flash 1.2s infinite alternate;
+}
+@keyframes flash {
+    0% { opacity: 0.3; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1.08); filter: drop-shadow(0 0 15px #90caf9); }
+}
+.loading-text {
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
 </style>
 </head>
 <body>
+
+<!-- 2. 轉場動畫 Overlay -->
+<div id="loadingOverlay">
+    <div class="cloud-loader">🌩️</div>
+    <div class="loading-text">正在分析您的氣象性格...</div>
+</div>
 
 <div class="container" id="mainContainer">
 
@@ -195,37 +263,40 @@ button:hover, .back-btn:hover {
             <h1>🌤️ 性格測驗 🌦️</h1>
             
             <h3>閃電次數(A)</h3>
-            <select id="A"></select>
+            <select id="A" onchange="checkInputs()"></select>
             
             <h3>雨量儀顯示次數(B)</h3>
-            <select id="B"></select>
+            <select id="B" onchange="checkInputs()"></select>
             
+            <!-- ⚠️ 1. 未選擇提示紅字（不彈出粗糙 alert） -->
+            <div class="error-tip" id="errorTip">⚠️ 請選擇閃電與雨量數值</div>
+
             <button onclick="startTest()">開始測驗</button>
         </div>
     </div>
 
     <!-- 結果頁區塊 (保持原始佈局) -->
     <div id="resultPage">
-        <!-- 隱藏畫布 (後台繪製下載圖用) -->
         <canvas id="canvasWorker" style="display: none;"></canvas>
 
-        <!-- (1) 置中的文字圖卡（原呈現方式 + 長按功能） -->
+        <!-- (1) 置中的文字圖卡 -->
         <div class="result-box">
             <div class="resultTitle" id="title"></div>
             <div class="resultText" id="text"></div>
-            <!-- 疊在卡片上的長按圖片層 -->
             <img id="longPressImage" alt="長按儲存圖片">
+        </div>
+
+        <!-- 4. 下載與分享功能按鈕組 -->
+        <div class="action-btn-group">
+            <button onclick="downloadResultImage()">📥 下載圖片</button>
+            <button onclick="shareResult()">🔗 分享結果</button>
+            <button class="back-btn" onclick="goHome()" style="background: #475569;">回首頁</button>
         </div>
         
         <!-- (2) 圖卡外的 QR Code 置中區 -->
         <div class="qr-outside-zone">
-            <div class="qr-outside-tip">📱 掃描或長按文字框下載結果圖</div>
+            <div class="qr-outside-tip">📱 掃描 QR Code 或用按鈕分享結果</div>
             <div id="qrcode"></div>
-        </div>
-
-        <!-- (3) 最底部的回首頁按鈕 -->
-        <div style="text-align: center;">
-            <button class="back-btn" onclick="goHome()">回首頁</button>
         </div>
     </div>
 
@@ -233,19 +304,16 @@ button:hover, .back-btn:hover {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-// ==========================================
-// 🎨 全域設定區：所有的圖片與文字內容在此修改
-// ==========================================
 const config = {
     homeImage: "images/home_banner.png", 
     results: {
         type1: {
-            title: "你/妳是...【晴天的魔術師】",
+            title: "你/妳是...<br>【晴天的魔術師】",
             text: "思考敏捷又台風穩健，做事兼具效率與高品質的實力派。",
             bg: "images/bg_sunny.png", tipColor: "#ffffff" 
         },
         type2: {
-            title: "你/妳是...【細心的小偵探】",
+            title: "你/妳是...<br>【細心的小偵探】",
             text: "能觀察到雲的千變萬化，會注意到大家沒發現的蛛絲馬跡。",
             bg: "images/bg_cloudy.png", tipColor: "#ffffff" 
         },
@@ -262,10 +330,11 @@ const config = {
     }
 };
 
-// 將 JS 設定中的 homeImage 動態套用為首頁圖卡的 background-image
+let generatedDataURL = "";
+let currentShareUrl = "";
+
 document.getElementById("homeCard").style.backgroundImage = `url('${config.homeImage}')`;
 
-// ⚡ 自動生成選單選項的函式 (0 到 maxNum)
 function populateSelect(selectId, maxNum) {
     const selectElem = document.getElementById(selectId);
     let htmlOptions = `<option value="">請選擇數字</option>`;
@@ -275,19 +344,36 @@ function populateSelect(selectId, maxNum) {
     selectElem.innerHTML = htmlOptions;
 }
 
-// 頁面載入時生成選單：A 上限 30，B 上限 100
 populateSelect("A", 30);
 populateSelect("B", 100);
+
+// 1. 選取變動時自動隱藏紅字提示
+function checkInputs() {
+    let valA = document.getElementById("A").value;
+    let valB = document.getElementById("B").value;
+    const errorTip = document.getElementById("errorTip");
+    
+    if (valA !== "" && valB !== "") {
+        errorTip.classList.remove("show");
+    }
+}
 
 function startTest(){
     let valA = document.getElementById("A").value;
     let valB = document.getElementById("B").value;
+    const errorTip = document.getElementById("errorTip");
 
-    // 檢查是否有選取數字
+    // 1. 沒選選項時顯示紅字並晃動提醒，絕不彈出 alert
     if(valA === "" || valB === ""){
-        alert("請選擇數字！");
+        errorTip.innerText = "⚠️ 請選擇閃電與雨量數值";
+        errorTip.classList.add("show");
         return;
     }
+    errorTip.classList.remove("show");
+
+    // 2. 觸發 1.5 秒轉場動畫
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    loadingOverlay.style.display = "flex";
 
     let A = parseInt(valA);
     let B = parseInt(valB);
@@ -298,32 +384,35 @@ function startTest(){
     else if(A > 3 && B <= 13)  { resData = config.results.type3; typeCode = "3"; }
     else                       { resData = config.results.type4; typeCode = "4"; }
 
-    document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
-    document.getElementById("title").innerHTML = resData.title;
-    document.getElementById("text").innerHTML = resData.text;
-
-    // 動態切換提示文字顏色
-    document.querySelector(".qr-outside-tip").style.color = resData.tipColor;
-
-    // 後台悄悄生成圖片，讓使用者長按中間文字框時能下載整張圖
-    prepareDownloadImage(resData.bg, resData.title, resData.text);
-
-    document.getElementById("homePage").style.display = "none";
-    
-    const resultPageElem = document.getElementById("resultPage");
-    resultPageElem.style.setProperty("display", "flex", "important");
-    document.getElementById("qrcode").innerHTML = "";
-
     let currentUrl = window.location.href;
     let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-    
-    let downloadPageUrl = `${baseUrl}/download.html?t=${typeCode}`;
+    currentShareUrl = `${baseUrl}/download.html?t=${typeCode}`;
 
-    new QRCode(document.getElementById("qrcode"), {
-        text: downloadPageUrl,
-        width: 110,
-        height: 110
-    });
+    // 後台繪製合成圖片
+    prepareDownloadImage(resData.bg, resData.title, resData.text);
+
+    // 1.5 秒後揭曉結果
+    setTimeout(() => {
+        loadingOverlay.style.display = "none";
+
+        document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
+        document.getElementById("title").innerHTML = resData.title;
+        document.getElementById("text").innerHTML = resData.text;
+
+        document.querySelector(".qr-outside-tip").style.color = resData.tipColor;
+
+        document.getElementById("homePage").style.display = "none";
+        
+        const resultPageElem = document.getElementById("resultPage");
+        resultPageElem.style.setProperty("display", "flex", "important");
+        document.getElementById("qrcode").innerHTML = "";
+
+        new QRCode(document.getElementById("qrcode"), {
+            text: currentShareUrl,
+            width: 90,
+            height: 90
+        });
+    }, 1500);
 }
     
 function goHome(){
@@ -333,9 +422,42 @@ function goHome(){
     document.getElementById("mainContainer").style.backgroundImage = "none";
     document.getElementById("A").value = "";
     document.getElementById("B").value = "";
+    document.getElementById("errorTip").classList.remove("show");
 }
 
-// 🎨 在背景生成結果圖片並附著於卡片上
+// 4.1 直接下載合成圖片 (電腦/手機皆相容)
+function downloadResultImage() {
+    if (!generatedDataURL) return;
+    const a = document.createElement("a");
+    a.href = generatedDataURL;
+    a.download = "personality_test_result.jpg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// 4.2 Web Share API 分享功能
+async function shareResult() {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: '性格測驗結果',
+                text: '快來看看我的氣象性格測驗結果！',
+                url: currentShareUrl
+            });
+        } catch (err) {
+            console.log("使用者取消分享", err);
+        }
+    } else {
+        navigator.clipboard.writeText(currentShareUrl);
+        const tip = document.getElementById("errorTip");
+        tip.innerText = "📋 結果連結已複製到剪貼簿！";
+        tip.classList.add("show");
+        setTimeout(() => tip.classList.remove("show"), 3000);
+    }
+}
+
+// 🎨 在背景生成結果圖片並處理雙行標題
 function prepareDownloadImage(bgUrl, title, text) {
     const canvas = document.getElementById("canvasWorker");
     const ctx = canvas.getContext("2d");
@@ -367,12 +489,23 @@ function prepareDownloadImage(bgUrl, title, text) {
         }
         ctx.fill();
 
-        // 3. 繪製標題
+        // 3. 處理標題換行並繪製
+        let cleanTitle = title.replace('<br>', ' ');
+        let titleParts = cleanTitle.split('...');
+        let line1 = titleParts[0] ? titleParts[0] + '...' : cleanTitle;
+        let line2 = titleParts[1] ? titleParts[1].trim() : '';
+
         let titleFontSize = Math.round(W * 0.052);
         ctx.fillStyle = "#1565c0";
         ctx.font = `bold ${titleFontSize}px "Noto Sans TC", sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText(title, W / 2, boxY + boxHeight * 0.3);
+
+        if (line2) {
+            ctx.fillText(line1, W / 2, boxY + boxHeight * 0.22);
+            ctx.fillText(line2, W / 2, boxY + boxHeight * 0.36);
+        } else {
+            ctx.fillText(line1, W / 2, boxY + boxHeight * 0.3);
+        }
 
         // 4. 繪製內文
         let textFontSize = Math.round(W * 0.038);
@@ -380,11 +513,12 @@ function prepareDownloadImage(bgUrl, title, text) {
         ctx.fillStyle = "#333333";
         ctx.font = `${textFontSize}px "Noto Sans TC", sans-serif`;
 
-        wrapText(ctx, text, W / 2, boxY + boxHeight * 0.52, boxWidth * 0.82, lineHeight);
+        wrapText(ctx, text, W / 2, boxY + boxHeight * 0.54, boxWidth * 0.82, lineHeight);
 
-        // 5. 賦予透明圖片 src 屬性，供手機使用者長按儲存
+        generatedDataURL = canvas.toDataURL("image/jpeg", 0.95);
+        
         const longPressImg = document.getElementById("longPressImage");
-        longPressImg.src = canvas.toDataURL("image/jpeg", 0.95);
+        longPressImg.src = generatedDataURL;
     };
 }
 
@@ -406,6 +540,23 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
     }
     context.fillText(line, x, y);
 }
+
+// ⏱️ 3. 閒置 60 秒自動歸位回首頁機制
+let idleTimer;
+function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+        goHome();
+    }, 60000); // 60秒無任何操作自動重置
+}
+
+// 監聽使用者全域操作動作
+window.onload = resetIdleTimer;
+document.onmousemove = resetIdleTimer;
+document.onkeypress = resetIdleTimer;
+document.ontouchstart = resetIdleTimer;
+document.onclick = resetIdleTimer;
+document.onscroll = resetIdleTimer;
 </script>
 </body>
 </html>
