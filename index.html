@@ -11,22 +11,51 @@
     box-sizing: border-box;
 }
 
+html, body {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
 body {
     margin: 0;
     padding: 0;
     font-family: "Noto Sans TC", sans-serif;
-    background: linear-gradient(135deg, #b3e5fc, #e1f5fe);
+    background: #1b2a38;
     display: flex;
     justify-content: center;
     align-items: center;
+    min-height: 100vh;
     min-height: 100dvh;
+}
+
+:root {
+    --s: 1;                                   /* 大螢幕字級倍率 */
+    --stageW: min(100vw, calc(100vh * 0.558));
+    --stageW: min(100vw, calc(100dvh * 0.558)); /* 內容區寬度（約 9:16） */
+}
+
+/* 🌫️ 兩側延伸背景：同一張圖放大＋模糊，手機上用不到所以預設隱藏 */
+#bgBlur {
+    display: none;
+    position: fixed;
+    inset: -60px;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(32px) brightness(0.9) saturate(1.1);
+}
+@media (min-aspect-ratio: 56/100) {
+    #bgBlur { display: block; }
 }
 
 /* 滿版主要容器 */
 .container {
-    width: 100vw;
-    max-width: 100%;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: var(--stageW);
     height: 100vh;
+    height: 100dvh;
     padding: 0;
     margin: 0 auto;
     background-size: cover;
@@ -245,9 +274,115 @@ button:hover, .back-btn:hover {
     font-weight: bold;
     letter-spacing: 1px;
 }
+
+/* QR 預設尺寸（以 240px 產生，再用 CSS 縮放，大螢幕時才夠清楚） */
+.qr-panel { display: flex; flex-direction: column; align-items: center; }
+.qr-title-desktop, .qr-sub-desktop { display: none; }
+.home-qr-zone { display: none; }
+#homeQr {
+    background: white;
+    padding: 8px;
+    border-radius: 8px;
+    display: inline-block;
+}
+#qrcode img, #qrcode canvas { width: 90px !important; height: 90px !important; }
+#homeQr img, #homeQr canvas { width: 160px !important; height: 160px !important; }
+
+/* 🔒 公用電腦（滑鼠操作）：不提供存圖與分享，結果只透過 QR 帶走 */
+@media (hover: hover) and (pointer: fine) {
+    #longPressImage { display: none; }
+    .share-btn { display: none; }
+}
+
+/* 🖥️ 大螢幕（筆電／桌機）：字級放大 */
+@media (min-width: 700px) and (min-height: 760px) {
+    :root { --s: 1.2; }
+}
+@media (min-width: 700px) and (min-height: 960px) {
+    :root { --s: 1.45; }
+}
+@media (min-width: 700px) and (min-height: 760px) {
+    .home-card-bg h1 { font-size: calc(28px * var(--s)); margin-bottom: calc(20px * var(--s)); }
+    .home-card-bg h3 { font-size: calc(18px * var(--s)); }
+    .home-card-bg select {
+        max-width: calc(300px * var(--s));
+        font-size: calc(18px * var(--s));
+        padding: calc(12px * var(--s));
+    }
+    .error-tip { font-size: calc(14px * var(--s)); height: calc(20px * var(--s)); }
+    button, .back-btn {
+        font-size: calc(16px * var(--s));
+        padding: calc(10px * var(--s)) calc(20px * var(--s));
+    }
+    .result-box { max-width: 100%; padding: calc(30px * var(--s)) calc(22px * var(--s)); }
+    .resultTitle { font-size: calc(26px * var(--s)); }
+    .resultText { font-size: calc(19px * var(--s)); }
+    .loading-text { font-size: calc(18px * var(--s)); }
+}
+
+/* 🖥️ 橫式大螢幕：QR 放到內容區右側的空白處 */
+@media (min-aspect-ratio: 1/1) and (min-width: 900px) and (min-height: 600px) {
+    .qr-outside-zone {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: calc(50vw + var(--stageW) / 2);
+        width: calc((100vw - var(--stageW)) / 2);
+        padding: 0 24px;
+        z-index: 5;
+    }
+    .qr-panel {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 20px;
+        padding: calc(24px * var(--s)) calc(20px * var(--s));
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+        max-width: 100%;
+        text-align: center;
+    }
+    .tip-mobile { display: none; }
+    .home-qr-zone {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: calc((100vw - var(--stageW)) / 2);
+        padding: 0 24px;
+        z-index: 5;
+    }
+    #homeQr { border: 1px solid #e3e8ee; }
+    #homeQr img, #homeQr canvas {
+        width: min(calc(170px * var(--s)), calc((100vw - var(--stageW)) / 2 - 110px)) !important;
+        height: min(calc(170px * var(--s)), calc((100vw - var(--stageW)) / 2 - 110px)) !important;
+    }
+    .qr-title-desktop {
+        display: block;
+        font-size: calc(18px * var(--s));
+        font-weight: bold;
+        color: #1E3A52;
+        line-height: 1.5;
+        margin-bottom: 14px;
+    }
+    .qr-sub-desktop {
+        display: block;
+        font-size: calc(13px * var(--s));
+        color: #555;
+        line-height: 1.6;
+        margin-top: 14px;
+    }
+    #qrcode { box-shadow: none; border: 1px solid #e3e8ee; }
+    #qrcode img, #qrcode canvas {
+        width: min(calc(170px * var(--s)), calc((100vw - var(--stageW)) / 2 - 110px)) !important;
+        height: min(calc(170px * var(--s)), calc((100vw - var(--stageW)) / 2 - 110px)) !important;
+    }
+}
 </style>
 </head>
 <body>
+
+<div id="bgBlur"></div>
 
 <!-- 轉場動畫 Overlay -->
 <div id="loadingOverlay">
@@ -259,6 +394,13 @@ button:hover, .back-btn:hover {
 
     <!-- 首頁區塊 -->
     <div id="homePage">
+        <!-- 🖥️ 筆電專用：左側「用自己的手機玩」QR（手機上不顯示） -->
+        <div class="home-qr-zone">
+            <div class="qr-panel">
+                <div class="qr-title-desktop">📱 想用自己的手機玩？<br>掃描 QR 直接開始</div>
+                <div id="homeQr"></div>
+            </div>
+        </div>
         <div class="home-card-bg" id="homeCard">
             <h1>🌤️ 性格測驗 🌦️</h1>
             
@@ -288,14 +430,18 @@ button:hover, .back-btn:hover {
 
         <!-- 功能按鈕組 -->
         <div class="action-btn-group">
-            <button onclick="shareResult()">🔗 分享結果</button>
+            <button class="share-btn" onclick="shareResult()">🔗 分享結果</button>
             <button class="back-btn" onclick="goHome()" style="background: #475569;">回首頁</button>
         </div>
         
         <!-- (2) QR Code 區與清晰提示 -->
         <div class="qr-outside-zone">
-            <div class="qr-outside-tip">💡 手機請【長按上方卡片】直接存入相簿</div>
-            <div id="qrcode"></div>
+            <div class="qr-panel">
+                <div class="qr-outside-tip tip-mobile">💡 手機請【長按上方卡片】直接存入相簿</div>
+                <div class="qr-title-desktop">📱 用手機掃描<br>帶走你的結果</div>
+                <div id="qrcode"></div>
+                <div class="qr-sub-desktop">此為公用電腦，結果不會儲存在這裡<br>請用手機掃描帶走</div>
+            </div>
         </div>
     </div>
 
@@ -329,10 +475,23 @@ const config = {
     }
 };
 
+// 公用電腦（以滑鼠操作）：不產生可存檔的圖片，也不開右鍵選單
+const isSharedDesktop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+if (isSharedDesktop) {
+    document.addEventListener("contextmenu", e => e.preventDefault());
+}
+
+// 📱 給「想用自己手機操作」的人掃的網址（筆電首頁左側顯示）
+const SITE_URL = "https://starlit-boba-9022a2.netlify.app/?openExternalBrowser=1";
+try {
+    new QRCode(document.getElementById("homeQr"), { text: SITE_URL, width: 240, height: 240 });
+} catch (e) { console.error("首頁 QR 產生失敗", e); }
+
 let generatedDataURL = "";
 let currentShareUrl = "";
 
 document.getElementById("homeCard").style.backgroundImage = `url('${config.homeImage}')`;
+document.getElementById("bgBlur").style.backgroundImage = `url('${config.homeImage}')`;
 
 function populateSelect(selectId, maxNum) {
     const selectElem = document.getElementById(selectId);
@@ -407,7 +566,7 @@ async function startTest(){
     const minWait = new Promise(r => setTimeout(r, 1500));
     const maxWait = new Promise(r => setTimeout(r, 12000));
     const ready = Promise.all([
-        prepareDownloadImage(resData.bg, resData.title, resData.text),
+        isSharedDesktop ? Promise.resolve() : prepareDownloadImage(resData.bg, resData.title, resData.text),
         preloadImage(resData.bg),
         minWait
     ]);
@@ -417,6 +576,7 @@ async function startTest(){
     loadingOverlay.style.display = "none";
 
     document.getElementById("mainContainer").style.backgroundImage = `url('${resData.bg}')`;
+    document.getElementById("bgBlur").style.backgroundImage = `url('${resData.bg}')`;
     document.getElementById("title").innerHTML = resData.title;
     document.getElementById("text").innerHTML = resData.text;
 
@@ -428,8 +588,8 @@ async function startTest(){
 
     new QRCode(document.getElementById("qrcode"), {
         text: currentShareUrl,
-        width: 90,
-        height: 90
+        width: 240,
+        height: 240
     });
 }
     
@@ -438,6 +598,7 @@ function goHome(){
     resultPageElem.style.setProperty("display", "none", "important");
     document.getElementById("homePage").style.display = "flex";
     document.getElementById("mainContainer").style.backgroundImage = "none";
+    document.getElementById("bgBlur").style.backgroundImage = `url('${config.homeImage}')`;
     document.getElementById("A").value = "";
     document.getElementById("B").value = "";
     document.getElementById("errorTip").classList.remove("show");
@@ -471,6 +632,7 @@ function prepareDownloadImage(bgUrl, title, text) {
     const img = new Image();
     img.src = bgUrl;
     img.onload = async function() {
+      try {
         try {
             await Promise.all([
                 document.fonts.load('bold 20px "Noto Sans TC"', title + text),
@@ -528,7 +690,11 @@ function prepareDownloadImage(bgUrl, title, text) {
         const longPressImg = document.getElementById("longPressImage");
         longPressImg.src = generatedDataURL;
         try { await longPressImg.decode(); } catch (e) {}  // 等圖片解碼完成再顯示
+      } catch (err) {
+        console.error("結果圖生成失敗", err);   // 失敗也要繼續，不要卡在 loading
+      } finally {
         resolve();
+      }
     };
     img.onerror = () => resolve();
   });
