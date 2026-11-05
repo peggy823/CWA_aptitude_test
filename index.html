@@ -203,8 +203,17 @@ button:hover, .back-btn:hover {
     max-width: 420px;
     overflow: hidden;
 }
-.resultTitle { font-size:26px; color:#1565c0; margin-bottom:15px; font-weight:bold; }
-.resultText { font-size:19px; line-height:1.7; color: #333; }
+.resultTitle {
+    font-size: clamp(22px, calc(var(--stageW) * 0.065), 48px);
+    color: #1565c0;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+.resultText {
+    font-size: clamp(16px, calc(var(--stageW) * 0.048), 34px);
+    line-height: 1.7;
+    color: #333;
+}
 
 /* 📱 疊在文字卡片上的透明實體圖片 (觸發手機長按直接存相簿) */
 #longPressImage {
